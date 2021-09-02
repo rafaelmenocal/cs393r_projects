@@ -1,0 +1,24 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/raf/Programming/cs393r/projects/cs393r_starter/src/navigation/simple_queue.h
+algorithm
+-
+deque
+-
+utility
+-
+
+/home/raf/Programming/cs393r/projects/cs393r_starter/src/navigation/simple_queue_test.cc
+stdio.h
+-
+stdint.h
+-
+simple_queue.h
+/home/raf/Programming/cs393r/projects/cs393r_starter/src/navigation/simple_queue.h
+

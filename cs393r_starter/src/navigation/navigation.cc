@@ -32,28 +32,32 @@
 #include "shared/ros/ros_helpers.h"
 #include "navigation.h"
 #include "visualization/visualization.h"
+#include <cstdlib>
 
 using Eigen::Vector2f;
 using amrl_msgs::AckermannCurvatureDriveMsg;
 using amrl_msgs::VisualizationMsg;
 using std::string;
 using std::vector;
+using namespace std;
 
 using namespace math_util;
 using namespace ros_helpers;
 
 namespace {
-ros::Publisher drive_pub_;
-ros::Publisher viz_pub_;
-VisualizationMsg local_viz_msg_;
-VisualizationMsg global_viz_msg_;
-AckermannCurvatureDriveMsg drive_msg_;
+ros::Publisher drive_pub_; // publish to /ackermann_curvature_drive
+ros::Publisher viz_pub_;  // publish to /visualization
+VisualizationMsg local_viz_msg_; // points, lines, arcs, etc.
+VisualizationMsg global_viz_msg_; // points, lines, arcs, etc.
+AckermannCurvatureDriveMsg drive_msg_; // velocity, curvature
 // Epsilon value for handling limited numerical precision.
 const float kEpsilon = 1e-5;
 } //namespace
 
 namespace navigation {
 
+// Navigation Constructor called when Navigation instantiated in
+// navigation_main.cc
 Navigation::Navigation(const string& map_file, ros::NodeHandle* n) :
     odom_initialized_(false),
     localization_initialized_(false),
@@ -75,35 +79,62 @@ Navigation::Navigation(const string& map_file, ros::NodeHandle* n) :
 }
 
 void Navigation::SetNavGoal(const Vector2f& loc, float angle) {
+  nav_complete_ = false;
+  nav_goal_loc_ = loc;
+  nav_goal_angle_ = angle;
 }
 
+// gets called in navigation_main.cc during ros::spinOnce() ? I think
 void Navigation::UpdateLocation(const Eigen::Vector2f& loc, float angle) {
   localization_initialized_ = true;
   robot_loc_ = loc;
   robot_angle_ = angle;
 }
 
+// gets called in navigation_main.cc during ros::spinOnce() ? I think
 void Navigation::UpdateOdometry(const Vector2f& loc,
                                 float angle,
                                 const Vector2f& vel,
                                 float ang_vel) {
   robot_omega_ = ang_vel;
   robot_vel_ = vel;
+  odom_loc_ = loc;
+  odom_angle_ = angle;
   if (!odom_initialized_) {
     odom_start_angle_ = angle;
     odom_start_loc_ = loc;
     odom_initialized_ = true;
     return;
   }
-  odom_loc_ = loc;
-  odom_angle_ = angle;
+  
 }
 
+// gets called in navigation_main.cc during ros::spinOnce() ? I think
 void Navigation::ObservePointCloud(const vector<Vector2f>& cloud,
                                    double time) {
   point_cloud_ = cloud;                                     
 }
 
+// conventient method to draw all aspects of the robot boundarys, wheels, etc
+void Draw_Robot(){
+  // draw velocity/curve vector/path
+  visualization::DrawPathOption(drive_msg_.curvature, drive_msg_.velocity, drive_msg_.curvature, local_viz_msg_);
+  // draw robot boundaries
+  // draw robot wheels
+  // draw robot safety margin
+  // draw laser rangefinder
+  // draw possible arc paths
+  return;
+}
+
+// Given a horizontally moving robot and a vertical wall
+// Return the distance from the robot to the wall
+int Distance_To_Vert_Wall(Vector2f robot_loc, Vector2f Wall)
+{
+  return abs(Wall[0] - robot_loc[0]);
+}
+
+// gets called in navigation_main.cc during navigation_->Run()
 void Navigation::Run() {
   // This function gets called 20 times a second to form the control loop.
   
@@ -113,16 +144,47 @@ void Navigation::Run() {
 
   // If odometry has not been initialized, we can't do anything.
   if (!odom_initialized_) return;
-
+  
   // The control iteration goes here. 
   // Feel free to make helper functions to structure the control appropriately.
   
   // The latest observed point cloud is accessible via "point_cloud_"
 
   // Eventually, you will have to set the control values to issue drive commands:
-  // drive_msg_.curvature = ...;
-  drive_msg_.velocity = 1;
+  // ---------------------------------------------------------
 
+
+  // Get actual velocity/direction of travel using odometry
+  // visualize direction of travel
+  Draw_Robot();
+
+  // visualize target as a vertical wall with a cross at the target point
+  visualization::DrawLine(nav_goal_loc_ + Vector2f(0, 10), 
+                          nav_goal_loc_ - Vector2f(0,10),
+                          0x68ad7b,
+                          global_viz_msg_);
+  visualization::DrawCross(nav_goal_loc_, 0.2, 0x68ad7b, global_viz_msg_);
+  
+  // ** Change to: 1) accelerate if not at max speed, and there is distance left (how much?)
+  // **            2) cruise if at max speed, and there is distance left (how much?)
+  // **            3) Decelerate if not enough distance left (what if there is insufficient distance?)
+  // drive to target wall and stop when the robot gets close (<= 0.1m)
+  if (Distance_To_Vert_Wall(robot_loc_, nav_goal_loc_) > 0.1) {
+    drive_msg_.velocity = 2.0;
+    // drive_msg_.curvature = 0.0;
+  } else {
+    drive_msg_.velocity = 0.0;
+    // drive_msg_.curvature = 0.0;
+    nav_complete_ = true;
+  }
+
+  // Next: account for motion along arcs
+  // Next: account for latency
+
+  // last_odom_reading = odom_loc_;
+
+
+  // ---------------------------------------------------------
   // Add timestamps to all messages.
   local_viz_msg_.header.stamp = ros::Time::now();
   global_viz_msg_.header.stamp = ros::Time::now();

@@ -141,9 +141,9 @@ int main(int argc, char** argv) {
   ros::Subscriber goto_sub =
       n.subscribe("/move_base_simple/goal", 1, &GoToCallback);
 
-  RateLoop loop(20.0);
+  RateLoop loop(20.0); // gets called 20 times per second
   while (run_ && ros::ok()) {
-    ros::spinOnce();
+    ros::spinOnce(); 
     navigation_->Run();
     loop.Sleep();
   }

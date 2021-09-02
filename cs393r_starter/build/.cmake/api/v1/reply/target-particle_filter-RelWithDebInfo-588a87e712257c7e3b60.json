@@ -1,0 +1,501 @@
+{
+	"artifacts" : 
+	[
+		{
+			"path" : "/home/raf/Programming/cs393r/projects/cs393r_starter/bin/particle_filter"
+		}
+	],
+	"backtrace" : 2,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_executable",
+			"ROSBUILD_ADD_EXECUTABLE",
+			"link_directories",
+			"ROSBUILD_INIT",
+			"TARGET_LINK_LIBRARIES",
+			"add_dependencies",
+			"add_definitions",
+			"configure_shared_library_build_settings",
+			"include",
+			"find_package",
+			"include_directories",
+			"INCLUDE_DIRECTORIES"
+		],
+		"files" : 
+		[
+			"/opt/ros/noetic/share/ros/core/rosbuild/public.cmake",
+			"CMakeLists.txt",
+			"/opt/ros/noetic/share/catkin/cmake/tools/libraries.cmake",
+			"/opt/ros/noetic/share/catkin/cmake/all.cmake",
+			"/opt/ros/noetic/share/catkin/cmake/catkinConfig.cmake"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 1
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 507,
+				"parent" : 1
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 20,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 300,
+				"parent" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 1,
+				"line" : 50,
+				"parent" : 0
+			},
+			{
+				"command" : 5,
+				"file" : 0,
+				"line" : 541,
+				"parent" : 1
+			},
+			{
+				"command" : 9,
+				"file" : 0,
+				"line" : 436,
+				"parent" : 3
+			},
+			{
+				"file" : 4,
+				"parent" : 7
+			},
+			{
+				"command" : 8,
+				"file" : 4,
+				"line" : 20,
+				"parent" : 8
+			},
+			{
+				"file" : 3,
+				"parent" : 9
+			},
+			{
+				"command" : 7,
+				"file" : 3,
+				"line" : 174,
+				"parent" : 10
+			},
+			{
+				"command" : 6,
+				"file" : 2,
+				"line" : 18,
+				"parent" : 11
+			},
+			{
+				"command" : 6,
+				"file" : 0,
+				"line" : 183,
+				"parent" : 3
+			},
+			{
+				"command" : 10,
+				"file" : 0,
+				"line" : 200,
+				"parent" : 3
+			},
+			{
+				"command" : 10,
+				"file" : 0,
+				"line" : 299,
+				"parent" : 3
+			},
+			{
+				"command" : 11,
+				"file" : 1,
+				"line" : 38,
+				"parent" : 0
+			},
+			{
+				"command" : 11,
+				"file" : 1,
+				"line" : 39,
+				"parent" : 0
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "-std=c++11 -Wall -Werror -g -O2 -g -DNDEBUG  "
+				},
+				{
+					"fragment" : "-W -Wall -Wno-unused-parameter -fno-strict-aliasing -pthread"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 12,
+					"define" : "ROS_BUILD_SHARED_LIBS=1"
+				},
+				{
+					"backtrace" : 13,
+					"define" : "ROS_PACKAGE_NAME=\"cs393r_starter\""
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 14,
+					"path" : "/home/raf/Programming/cs393r/projects/cs393r_starter/include"
+				},
+				{
+					"backtrace" : 15,
+					"path" : "/home/raf/Programming/cs393r/ut_automata/msg_gen/cpp/include"
+				},
+				{
+					"backtrace" : 15,
+					"path" : "/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/msg_gen/cpp/include"
+				},
+				{
+					"backtrace" : 15,
+					"path" : "/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/srv_gen/cpp/include"
+				},
+				{
+					"backtrace" : 15,
+					"path" : "/opt/ros/noetic/include"
+				},
+				{
+					"backtrace" : 16,
+					"path" : "/home/raf/Programming/cs393r/projects/cs393r_starter/src/shared"
+				},
+				{
+					"backtrace" : 17,
+					"path" : "/home/raf/Programming/cs393r/projects/cs393r_starter/src"
+				}
+			],
+			"language" : "CXX",
+			"sourceIndexes" : 
+			[
+				0,
+				1
+			]
+		}
+	],
+	"dependencies" : 
+	[
+		{
+			"backtrace" : 6,
+			"id" : "rosbuild_precompile::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 5,
+			"id" : "shared_library::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 5,
+			"id" : "amrl-shared-lib::@98093a27b7e7f29c85ce"
+		}
+	],
+	"id" : "particle_filter::@6890427a1f51a3e7e1df",
+	"link" : 
+	{
+		"commandFragments" : 
+		[
+			{
+				"fragment" : "-std=c++11 -Wall -Werror -g -O2 -g -DNDEBUG",
+				"role" : "flags"
+			},
+			{
+				"fragment" : "-rdynamic /usr/lib/x86_64-linux-gnu/libboost_date_time.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0 /usr/lib/x86_64-linux-gnu/libconsole_bridge.so.0.4 /usr/lib/x86_64-linux-gnu/libboost_date_time.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0 /usr/lib/x86_64-linux-gnu/libconsole_bridge.so.0.4 /usr/lib/x86_64-linux-gnu/libboost_date_time.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0 /usr/lib/x86_64-linux-gnu/libconsole_bridge.so.0.4 /usr/lib/x86_64-linux-gnu/libboost_date_time.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0 /usr/lib/x86_64-linux-gnu/libconsole_bridge.so.0.4 /usr/lib/x86_64-linux-gnu/libboost_date_time.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0 /usr/lib/x86_64-linux-gnu/libconsole_bridge.so.0.4 /usr/lib/x86_64-linux-gnu/libboost_chrono.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0 /usr/lib/x86_64-linux-gnu/liblog4cxx.so /usr/lib/x86_64-linux-gnu/libboost_regex.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_date_time.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0 /usr/lib/x86_64-linux-gnu/libconsole_bridge.so.0.4 /usr/lib/x86_64-linux-gnu/libconsole_bridge.so.0.4 /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.71.0 /usr/lib/x86_64-linux-gnu/libtinyxml2.so /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0 /usr/lib/x86_64-linux-gnu/libPocoFoundation.so /usr/lib/x86_64-linux-gnu/libconsole_bridge.so.0.4 /usr/lib/x86_64-linux-gnu/libpython3.8.so /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_program_options.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0 /usr/lib/x86_64-linux-gnu/libtinyxml2.so /usr/lib/x86_64-linux-gnu/liblz4.so /usr/lib/x86_64-linux-gnu/libboost_chrono.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0 /usr/lib/x86_64-linux-gnu/liblog4cxx.so /usr/lib/x86_64-linux-gnu/libboost_regex.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_date_time.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0 /usr/lib/x86_64-linux-gnu/libconsole_bridge.so.0.4 /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_chrono.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0 /usr/lib/x86_64-linux-gnu/libconsole_bridge.so.0.4 /usr/lib/x86_64-linux-gnu/liblog4cxx.so /usr/lib/x86_64-linux-gnu/libboost_regex.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_date_time.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0 /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0 /usr/lib/x86_64-linux-gnu/libconsole_bridge.so.0.4 -pthread",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 4,
+				"fragment" : "-L/opt/ros/noetic/lib",
+				"role" : "libraryPath"
+			},
+			{
+				"fragment" : "-L/home/raf/Programming/cs393r/projects/cs393r_starter/lib",
+				"role" : "libraryPath"
+			},
+			{
+				"fragment" : "-Wl,-rpath,/opt/ros/noetic/lib:/home/raf/Programming/cs393r/projects/cs393r_starter/lib",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lrosbag",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lrosbag_storage",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclass_loader",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-ldl",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lroslib",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lrospack",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lroslz4",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-ltopic_tools",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-ltf",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-ltf2_ros",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lactionlib",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lmessage_filters",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lroscpp",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lpthread",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lxmlrpcpp",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-ltf2",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lroscpp_serialization",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lrosconsole",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lrosconsole_log4cxx",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lrosconsole_backend_interface",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lrostime",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lcpp_common",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 5,
+				"fragment" : "../lib/libshared_library.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lroslib",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lroscpp",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lrosbag",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lglog",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lgflags",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 5,
+				"fragment" : "../lib/libamrl-shared-lib.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lboost_system",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-llua5.1",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lpthread",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lrosbag_storage",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclass_loader",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-ldl",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lrospack",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lroslz4",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-ltopic_tools",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-ltf",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-ltf2_ros",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lactionlib",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lmessage_filters",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lxmlrpcpp",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-ltf2",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lroscpp_serialization",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lrosconsole",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lrosconsole_log4cxx",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lrosconsole_backend_interface",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lrostime",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lcpp_common",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lgflags",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lboost_system",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-llua5.1",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lglog",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lpthread",
+				"role" : "libraries"
+			}
+		],
+		"language" : "CXX"
+	},
+	"name" : "particle_filter",
+	"nameOnDisk" : "particle_filter",
+	"paths" : 
+	{
+		"build" : ".",
+		"source" : "."
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0,
+				1
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/particle_filter/particle_filter_main.cc",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/particle_filter/particle_filter.cc",
+			"sourceGroupIndex" : 0
+		}
+	],
+	"type" : "EXECUTABLE"
+}

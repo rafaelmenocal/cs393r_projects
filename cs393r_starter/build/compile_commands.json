@@ -1,0 +1,97 @@
+[
+{
+  "directory": "/home/raf/Programming/cs393r/projects/cs393r_starter/build",
+  "command": "/usr/bin/g++  -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"cs393r_starter\\\" -Dshared_library_EXPORTS -I/home/raf/Programming/cs393r/projects/cs393r_starter/include -I/home/raf/Programming/cs393r/ut_automata/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/srv_gen/cpp/include -I/opt/ros/noetic/include -I/home/raf/Programming/cs393r/projects/cs393r_starter/src/shared -I/home/raf/Programming/cs393r/projects/cs393r_starter/src  -std=c++11 -Wall -Werror -g -O2 -g -DNDEBUG -fPIC   -o CMakeFiles/shared_library.dir/src/visualization/visualization.cc.o -c /home/raf/Programming/cs393r/projects/cs393r_starter/src/visualization/visualization.cc",
+  "file": "/home/raf/Programming/cs393r/projects/cs393r_starter/src/visualization/visualization.cc"
+},
+{
+  "directory": "/home/raf/Programming/cs393r/projects/cs393r_starter/build",
+  "command": "/usr/bin/g++  -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"cs393r_starter\\\" -Dshared_library_EXPORTS -I/home/raf/Programming/cs393r/projects/cs393r_starter/include -I/home/raf/Programming/cs393r/ut_automata/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/srv_gen/cpp/include -I/opt/ros/noetic/include -I/home/raf/Programming/cs393r/projects/cs393r_starter/src/shared -I/home/raf/Programming/cs393r/projects/cs393r_starter/src  -std=c++11 -Wall -Werror -g -O2 -g -DNDEBUG -fPIC   -o CMakeFiles/shared_library.dir/src/vector_map/vector_map.cc.o -c /home/raf/Programming/cs393r/projects/cs393r_starter/src/vector_map/vector_map.cc",
+  "file": "/home/raf/Programming/cs393r/projects/cs393r_starter/src/vector_map/vector_map.cc"
+},
+{
+  "directory": "/home/raf/Programming/cs393r/projects/cs393r_starter/build",
+  "command": "/usr/bin/g++  -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"cs393r_starter\\\" -I/home/raf/Programming/cs393r/projects/cs393r_starter/include -I/home/raf/Programming/cs393r/ut_automata/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/srv_gen/cpp/include -I/opt/ros/noetic/include -I/home/raf/Programming/cs393r/projects/cs393r_starter/src/shared -I/home/raf/Programming/cs393r/projects/cs393r_starter/src  -std=c++11 -Wall -Werror -g -O2 -g -DNDEBUG   -o CMakeFiles/simple_queue_test.dir/src/navigation/simple_queue_test.cc.o -c /home/raf/Programming/cs393r/projects/cs393r_starter/src/navigation/simple_queue_test.cc",
+  "file": "/home/raf/Programming/cs393r/projects/cs393r_starter/src/navigation/simple_queue_test.cc"
+},
+{
+  "directory": "/home/raf/Programming/cs393r/projects/cs393r_starter/build",
+  "command": "/usr/bin/g++  -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"cs393r_starter\\\" -I/home/raf/Programming/cs393r/projects/cs393r_starter/include -I/home/raf/Programming/cs393r/ut_automata/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/srv_gen/cpp/include -I/opt/ros/noetic/include -I/home/raf/Programming/cs393r/projects/cs393r_starter/src/shared -I/home/raf/Programming/cs393r/projects/cs393r_starter/src  -std=c++11 -Wall -Werror -g -O2 -g -DNDEBUG   -W -Wall -Wno-unused-parameter -fno-strict-aliasing -pthread -o CMakeFiles/slam.dir/src/slam/slam_main.cc.o -c /home/raf/Programming/cs393r/projects/cs393r_starter/src/slam/slam_main.cc",
+  "file": "/home/raf/Programming/cs393r/projects/cs393r_starter/src/slam/slam_main.cc"
+},
+{
+  "directory": "/home/raf/Programming/cs393r/projects/cs393r_starter/build",
+  "command": "/usr/bin/g++  -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"cs393r_starter\\\" -I/home/raf/Programming/cs393r/projects/cs393r_starter/include -I/home/raf/Programming/cs393r/ut_automata/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/srv_gen/cpp/include -I/opt/ros/noetic/include -I/home/raf/Programming/cs393r/projects/cs393r_starter/src/shared -I/home/raf/Programming/cs393r/projects/cs393r_starter/src  -std=c++11 -Wall -Werror -g -O2 -g -DNDEBUG   -W -Wall -Wno-unused-parameter -fno-strict-aliasing -pthread -o CMakeFiles/slam.dir/src/slam/slam.cc.o -c /home/raf/Programming/cs393r/projects/cs393r_starter/src/slam/slam.cc",
+  "file": "/home/raf/Programming/cs393r/projects/cs393r_starter/src/slam/slam.cc"
+},
+{
+  "directory": "/home/raf/Programming/cs393r/projects/cs393r_starter/build",
+  "command": "/usr/bin/g++  -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"cs393r_starter\\\" -I/home/raf/Programming/cs393r/projects/cs393r_starter/include -I/home/raf/Programming/cs393r/ut_automata/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/srv_gen/cpp/include -I/opt/ros/noetic/include -I/home/raf/Programming/cs393r/projects/cs393r_starter/src/shared -I/home/raf/Programming/cs393r/projects/cs393r_starter/src  -std=c++11 -Wall -Werror -g -O2 -g -DNDEBUG   -W -Wall -Wno-unused-parameter -fno-strict-aliasing -pthread -o CMakeFiles/particle_filter.dir/src/particle_filter/particle_filter_main.cc.o -c /home/raf/Programming/cs393r/projects/cs393r_starter/src/particle_filter/particle_filter_main.cc",
+  "file": "/home/raf/Programming/cs393r/projects/cs393r_starter/src/particle_filter/particle_filter_main.cc"
+},
+{
+  "directory": "/home/raf/Programming/cs393r/projects/cs393r_starter/build",
+  "command": "/usr/bin/g++  -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"cs393r_starter\\\" -I/home/raf/Programming/cs393r/projects/cs393r_starter/include -I/home/raf/Programming/cs393r/ut_automata/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/srv_gen/cpp/include -I/opt/ros/noetic/include -I/home/raf/Programming/cs393r/projects/cs393r_starter/src/shared -I/home/raf/Programming/cs393r/projects/cs393r_starter/src  -std=c++11 -Wall -Werror -g -O2 -g -DNDEBUG   -W -Wall -Wno-unused-parameter -fno-strict-aliasing -pthread -o CMakeFiles/particle_filter.dir/src/particle_filter/particle_filter.cc.o -c /home/raf/Programming/cs393r/projects/cs393r_starter/src/particle_filter/particle_filter.cc",
+  "file": "/home/raf/Programming/cs393r/projects/cs393r_starter/src/particle_filter/particle_filter.cc"
+},
+{
+  "directory": "/home/raf/Programming/cs393r/projects/cs393r_starter/build",
+  "command": "/usr/bin/g++  -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"cs393r_starter\\\" -I/home/raf/Programming/cs393r/projects/cs393r_starter/include -I/home/raf/Programming/cs393r/ut_automata/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/srv_gen/cpp/include -I/opt/ros/noetic/include -I/home/raf/Programming/cs393r/projects/cs393r_starter/src/shared -I/home/raf/Programming/cs393r/projects/cs393r_starter/src  -std=c++11 -Wall -Werror -g -O2 -g -DNDEBUG   -W -Wall -Wno-unused-parameter -fno-strict-aliasing -pthread -o CMakeFiles/navigation.dir/src/navigation/navigation_main.cc.o -c /home/raf/Programming/cs393r/projects/cs393r_starter/src/navigation/navigation_main.cc",
+  "file": "/home/raf/Programming/cs393r/projects/cs393r_starter/src/navigation/navigation_main.cc"
+},
+{
+  "directory": "/home/raf/Programming/cs393r/projects/cs393r_starter/build",
+  "command": "/usr/bin/g++  -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"cs393r_starter\\\" -I/home/raf/Programming/cs393r/projects/cs393r_starter/include -I/home/raf/Programming/cs393r/ut_automata/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/srv_gen/cpp/include -I/opt/ros/noetic/include -I/home/raf/Programming/cs393r/projects/cs393r_starter/src/shared -I/home/raf/Programming/cs393r/projects/cs393r_starter/src  -std=c++11 -Wall -Werror -g -O2 -g -DNDEBUG   -W -Wall -Wno-unused-parameter -fno-strict-aliasing -pthread -o CMakeFiles/navigation.dir/src/navigation/navigation.cc.o -c /home/raf/Programming/cs393r/projects/cs393r_starter/src/navigation/navigation.cc",
+  "file": "/home/raf/Programming/cs393r/projects/cs393r_starter/src/navigation/navigation.cc"
+},
+{
+  "directory": "/home/raf/Programming/cs393r/projects/cs393r_starter/build",
+  "command": "/usr/bin/g++  -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"cs393r_starter\\\" -I/home/raf/Programming/cs393r/projects/cs393r_starter/include -I/home/raf/Programming/cs393r/ut_automata/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/srv_gen/cpp/include -I/opt/ros/noetic/include -I/home/raf/Programming/cs393r/projects/cs393r_starter/src/shared -I/home/raf/Programming/cs393r/projects/cs393r_starter/src  -std=c++11 -Wall -Werror -g -O2 -g -DNDEBUG   -o CMakeFiles/eigen_tutorial.dir/src/eigen_tutorial.cc.o -c /home/raf/Programming/cs393r/projects/cs393r_starter/src/eigen_tutorial.cc",
+  "file": "/home/raf/Programming/cs393r/projects/cs393r_starter/src/eigen_tutorial.cc"
+},
+{
+  "directory": "/home/raf/Programming/cs393r/projects/cs393r_starter/build/gtest/googlemock",
+  "command": "/usr/bin/g++  -DGTEST_CREATE_SHARED_LIBRARY=1 -DROS_PACKAGE_NAME=\\\"cs393r_starter\\\" -Dgmock_main_EXPORTS -I/home/raf/Programming/cs393r/projects/cs393r_starter/include -I/home/raf/Programming/cs393r/ut_automata/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/srv_gen/cpp/include -I/opt/ros/noetic/include -isystem /usr/src/googletest/googlemock/include -isystem /usr/src/googletest/googlemock -isystem /usr/src/googletest/googletest/include -isystem /usr/src/googletest/googletest  -std=c++11 -Wall -Werror -g -O2 -g -DNDEBUG -fPIC   -Wall -Wshadow -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -DGTEST_HAS_PTHREAD=1 -std=c++11 -o CMakeFiles/gmock_main.dir/src/gmock_main.cc.o -c /usr/src/googletest/googlemock/src/gmock_main.cc",
+  "file": "/usr/src/googletest/googlemock/src/gmock_main.cc"
+},
+{
+  "directory": "/home/raf/Programming/cs393r/projects/cs393r_starter/build/gtest/googlemock",
+  "command": "/usr/bin/g++  -DGTEST_CREATE_SHARED_LIBRARY=1 -DROS_PACKAGE_NAME=\\\"cs393r_starter\\\" -Dgmock_EXPORTS -I/home/raf/Programming/cs393r/projects/cs393r_starter/include -I/home/raf/Programming/cs393r/ut_automata/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/srv_gen/cpp/include -I/opt/ros/noetic/include -I/usr/src/googletest/googlemock/include -I/usr/src/googletest/googlemock -isystem /usr/src/googletest/googletest/include -isystem /usr/src/googletest/googletest  -std=c++11 -Wall -Werror -g -O2 -g -DNDEBUG -fPIC   -Wall -Wshadow -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -DGTEST_HAS_PTHREAD=1 -std=c++11 -o CMakeFiles/gmock.dir/src/gmock-all.cc.o -c /usr/src/googletest/googlemock/src/gmock-all.cc",
+  "file": "/usr/src/googletest/googlemock/src/gmock-all.cc"
+},
+{
+  "directory": "/home/raf/Programming/cs393r/projects/cs393r_starter/build/gtest/googletest",
+  "command": "/usr/bin/g++  -DGTEST_CREATE_SHARED_LIBRARY=1 -DROS_PACKAGE_NAME=\\\"cs393r_starter\\\" -Dgtest_main_EXPORTS -I/home/raf/Programming/cs393r/projects/cs393r_starter/include -I/home/raf/Programming/cs393r/ut_automata/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/srv_gen/cpp/include -I/opt/ros/noetic/include -isystem /usr/src/googletest/googletest/include -isystem /usr/src/googletest/googletest  -std=c++11 -Wall -Werror -g -O2 -g -DNDEBUG -fPIC   -Wall -Wshadow -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -DGTEST_HAS_PTHREAD=1 -std=c++11 -o CMakeFiles/gtest_main.dir/src/gtest_main.cc.o -c /usr/src/googletest/googletest/src/gtest_main.cc",
+  "file": "/usr/src/googletest/googletest/src/gtest_main.cc"
+},
+{
+  "directory": "/home/raf/Programming/cs393r/projects/cs393r_starter/build/gtest/googletest",
+  "command": "/usr/bin/g++  -DGTEST_CREATE_SHARED_LIBRARY=1 -DROS_PACKAGE_NAME=\\\"cs393r_starter\\\" -Dgtest_EXPORTS -I/home/raf/Programming/cs393r/projects/cs393r_starter/include -I/home/raf/Programming/cs393r/ut_automata/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/srv_gen/cpp/include -I/opt/ros/noetic/include -I/usr/src/googletest/googletest/include -I/usr/src/googletest/googletest  -std=c++11 -Wall -Werror -g -O2 -g -DNDEBUG -fPIC   -Wall -Wshadow -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -std=c++11 -o CMakeFiles/gtest.dir/src/gtest-all.cc.o -c /usr/src/googletest/googletest/src/gtest-all.cc",
+  "file": "/usr/src/googletest/googletest/src/gtest-all.cc"
+},
+{
+  "directory": "/home/raf/Programming/cs393r/projects/cs393r_starter/build/src/shared",
+  "command": "/usr/bin/g++  -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"cs393r_starter\\\" -Damrl_shared_lib_EXPORTS -I/home/raf/Programming/cs393r/projects/cs393r_starter/build/src/shared -I/home/raf/Programming/cs393r/projects/cs393r_starter/src/shared -I/home/raf/Programming/cs393r/projects/cs393r_starter/include -I/home/raf/Programming/cs393r/ut_automata/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/srv_gen/cpp/include -I/opt/ros/noetic/include  -std=c++11 -Wall -Werror -g -std=c++11 -O2 -g -DNDEBUG -fPIC   -o CMakeFiles/amrl-shared-lib.dir/util/helpers.cc.o -c /home/raf/Programming/cs393r/projects/cs393r_starter/src/shared/util/helpers.cc",
+  "file": "/home/raf/Programming/cs393r/projects/cs393r_starter/src/shared/util/helpers.cc"
+},
+{
+  "directory": "/home/raf/Programming/cs393r/projects/cs393r_starter/build/src/shared",
+  "command": "/usr/bin/g++  -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"cs393r_starter\\\" -Damrl_shared_lib_EXPORTS -I/home/raf/Programming/cs393r/projects/cs393r_starter/build/src/shared -I/home/raf/Programming/cs393r/projects/cs393r_starter/src/shared -I/home/raf/Programming/cs393r/projects/cs393r_starter/include -I/home/raf/Programming/cs393r/ut_automata/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/srv_gen/cpp/include -I/opt/ros/noetic/include  -std=c++11 -Wall -Werror -g -std=c++11 -O2 -g -DNDEBUG -fPIC   -o CMakeFiles/amrl-shared-lib.dir/util/pthread_utils.cc.o -c /home/raf/Programming/cs393r/projects/cs393r_starter/src/shared/util/pthread_utils.cc",
+  "file": "/home/raf/Programming/cs393r/projects/cs393r_starter/src/shared/util/pthread_utils.cc"
+},
+{
+  "directory": "/home/raf/Programming/cs393r/projects/cs393r_starter/build/src/shared",
+  "command": "/usr/bin/g++  -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"cs393r_starter\\\" -Damrl_shared_lib_EXPORTS -I/home/raf/Programming/cs393r/projects/cs393r_starter/build/src/shared -I/home/raf/Programming/cs393r/projects/cs393r_starter/src/shared -I/home/raf/Programming/cs393r/projects/cs393r_starter/include -I/home/raf/Programming/cs393r/ut_automata/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/srv_gen/cpp/include -I/opt/ros/noetic/include  -std=c++11 -Wall -Werror -g -std=c++11 -O2 -g -DNDEBUG -fPIC   -o CMakeFiles/amrl-shared-lib.dir/util/timer.cc.o -c /home/raf/Programming/cs393r/projects/cs393r_starter/src/shared/util/timer.cc",
+  "file": "/home/raf/Programming/cs393r/projects/cs393r_starter/src/shared/util/timer.cc"
+},
+{
+  "directory": "/home/raf/Programming/cs393r/projects/cs393r_starter/build/src/shared",
+  "command": "/usr/bin/g++  -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"cs393r_starter\\\" -Damrl_shared_lib_EXPORTS -I/home/raf/Programming/cs393r/projects/cs393r_starter/build/src/shared -I/home/raf/Programming/cs393r/projects/cs393r_starter/src/shared -I/home/raf/Programming/cs393r/projects/cs393r_starter/include -I/home/raf/Programming/cs393r/ut_automata/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/srv_gen/cpp/include -I/opt/ros/noetic/include  -std=c++11 -Wall -Werror -g -std=c++11 -O2 -g -DNDEBUG -fPIC   -o CMakeFiles/amrl-shared-lib.dir/util/random.cc.o -c /home/raf/Programming/cs393r/projects/cs393r_starter/src/shared/util/random.cc",
+  "file": "/home/raf/Programming/cs393r/projects/cs393r_starter/src/shared/util/random.cc"
+},
+{
+  "directory": "/home/raf/Programming/cs393r/projects/cs393r_starter/build/src/shared",
+  "command": "/usr/bin/g++  -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"cs393r_starter\\\" -Damrl_shared_lib_EXPORTS -I/home/raf/Programming/cs393r/projects/cs393r_starter/build/src/shared -I/home/raf/Programming/cs393r/projects/cs393r_starter/src/shared -I/home/raf/Programming/cs393r/projects/cs393r_starter/include -I/home/raf/Programming/cs393r/ut_automata/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/msg_gen/cpp/include -I/home/raf/Programming/cs393r/amrl_libraries/amrl_msgs/srv_gen/cpp/include -I/opt/ros/noetic/include  -std=c++11 -Wall -Werror -g -std=c++11 -O2 -g -DNDEBUG -fPIC   -o CMakeFiles/amrl-shared-lib.dir/util/terminal_colors.cc.o -c /home/raf/Programming/cs393r/projects/cs393r_starter/src/shared/util/terminal_colors.cc",
+  "file": "/home/raf/Programming/cs393r/projects/cs393r_starter/src/shared/util/terminal_colors.cc"
+}
+]

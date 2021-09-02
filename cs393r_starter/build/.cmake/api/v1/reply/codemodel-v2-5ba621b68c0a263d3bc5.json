@@ -1,0 +1,446 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						4
+					],
+					"hasInstallRule" : true,
+					"minimumCMakeVersion" : 
+					{
+						"string" : "2.4.6"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						6,
+						7,
+						8,
+						9,
+						14,
+						15,
+						16,
+						17,
+						18,
+						19,
+						20,
+						21,
+						22,
+						23,
+						24,
+						25,
+						26,
+						27,
+						28,
+						29,
+						30
+					]
+				},
+				{
+					"build" : "gtest",
+					"childIndexes" : 
+					[
+						2
+					],
+					"minimumCMakeVersion" : 
+					{
+						"string" : "2.8.8"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 1,
+					"source" : "/usr/src/googletest"
+				},
+				{
+					"build" : "gtest/googlemock",
+					"childIndexes" : 
+					[
+						3
+					],
+					"minimumCMakeVersion" : 
+					{
+						"string" : "2.6.4"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 2,
+					"source" : "/usr/src/googletest/googlemock",
+					"targetIndexes" : 
+					[
+						10,
+						11
+					]
+				},
+				{
+					"build" : "gtest/googletest",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "2.6.4"
+					},
+					"parentIndex" : 2,
+					"projectIndex" : 3,
+					"source" : "/usr/src/googletest/googletest",
+					"targetIndexes" : 
+					[
+						12,
+						13
+					]
+				},
+				{
+					"build" : "src/shared",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "2.8.11"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 4,
+					"source" : "src/shared",
+					"targetIndexes" : 
+					[
+						5
+					]
+				}
+			],
+			"name" : "RelWithDebInfo",
+			"projects" : 
+			[
+				{
+					"childIndexes" : 
+					[
+						1,
+						4
+					],
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "cs393r_starter",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						6,
+						7,
+						8,
+						9,
+						14,
+						15,
+						16,
+						17,
+						18,
+						19,
+						20,
+						21,
+						22,
+						23,
+						24,
+						25,
+						26,
+						27,
+						28,
+						29,
+						30
+					]
+				},
+				{
+					"childIndexes" : 
+					[
+						2
+					],
+					"directoryIndexes" : 
+					[
+						1
+					],
+					"name" : "googletest-distribution",
+					"parentIndex" : 0
+				},
+				{
+					"childIndexes" : 
+					[
+						3
+					],
+					"directoryIndexes" : 
+					[
+						2
+					],
+					"name" : "gmock",
+					"parentIndex" : 1,
+					"targetIndexes" : 
+					[
+						10,
+						11
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						3
+					],
+					"name" : "gtest",
+					"parentIndex" : 2,
+					"targetIndexes" : 
+					[
+						12,
+						13
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						4
+					],
+					"name" : "amrl-shared-lib",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						5
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "ROSBUILD_genmsg_cpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ROSBUILD_genmsg_cpp-RelWithDebInfo-0a1e346bcc7fd02f549d.json",
+					"name" : "ROSBUILD_genmsg_cpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ROSBUILD_genmsg_lisp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ROSBUILD_genmsg_lisp-RelWithDebInfo-018c1a358241b445e56a.json",
+					"name" : "ROSBUILD_genmsg_lisp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ROSBUILD_gensrv_cpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ROSBUILD_gensrv_cpp-RelWithDebInfo-8c6648ee68297752100c.json",
+					"name" : "ROSBUILD_gensrv_cpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ROSBUILD_gensrv_lisp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ROSBUILD_gensrv_lisp-RelWithDebInfo-d9c39ef234532fc93b20.json",
+					"name" : "ROSBUILD_gensrv_lisp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "_catkin_empty_exported_target::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-_catkin_empty_exported_target-RelWithDebInfo-7f7fb943ff0bbbf6eb8e.json",
+					"name" : "_catkin_empty_exported_target",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "amrl-shared-lib::@98093a27b7e7f29c85ce",
+					"jsonFile" : "target-amrl-shared-lib-RelWithDebInfo-086afc3c416ff6f12f3b.json",
+					"name" : "amrl-shared-lib",
+					"projectIndex" : 4
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "clean_test_results::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-clean_test_results-RelWithDebInfo-050f9ab0db2ab98cabfe.json",
+					"name" : "clean_test_results",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "download_extra_data::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-download_extra_data-RelWithDebInfo-72a84f1fdf45df18ad0a.json",
+					"name" : "download_extra_data",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "doxygen::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-doxygen-RelWithDebInfo-6c1f4e484ab2bd2964f1.json",
+					"name" : "doxygen",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "eigen_tutorial::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-eigen_tutorial-RelWithDebInfo-0a269372abd62b934709.json",
+					"name" : "eigen_tutorial",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "gmock::@e3f94eedc5dc07131386",
+					"jsonFile" : "target-gmock-RelWithDebInfo-00c6ddc4900f9b7677f2.json",
+					"name" : "gmock",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "gmock_main::@e3f94eedc5dc07131386",
+					"jsonFile" : "target-gmock_main-RelWithDebInfo-8f9b40ba867d985c464e.json",
+					"name" : "gmock_main",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "gtest::@b738d542747fbb7ea6e3",
+					"jsonFile" : "target-gtest-RelWithDebInfo-e57469b431342b7893fb.json",
+					"name" : "gtest",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "gtest_main::@b738d542747fbb7ea6e3",
+					"jsonFile" : "target-gtest_main-RelWithDebInfo-d1fcf08d6722d0e27406.json",
+					"name" : "gtest_main",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "navigation::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-navigation-RelWithDebInfo-d568e5582a2bad0886b8.json",
+					"name" : "navigation",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "particle_filter::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-particle_filter-RelWithDebInfo-588a87e712257c7e3b60.json",
+					"name" : "particle_filter",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "rosbuild_clean-test-results::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-rosbuild_clean-test-results-RelWithDebInfo-1ec590d875af74d892bb.json",
+					"name" : "rosbuild_clean-test-results",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "rosbuild_precompile::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-rosbuild_precompile-RelWithDebInfo-16e69e7ee0f3754262c8.json",
+					"name" : "rosbuild_precompile",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "rosbuild_premsgsrvgen::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-rosbuild_premsgsrvgen-RelWithDebInfo-453994cd767323c369bc.json",
+					"name" : "rosbuild_premsgsrvgen",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "rospack_genmsg::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-rospack_genmsg-RelWithDebInfo-3ae680b2e02f689f56fb.json",
+					"name" : "rospack_genmsg",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "rospack_genmsg_libexe::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-rospack_genmsg_libexe-RelWithDebInfo-480906ab9755fdb74823.json",
+					"name" : "rospack_genmsg_libexe",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "rospack_gensrv::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-rospack_gensrv-RelWithDebInfo-e6fecd69291ec1e5417d.json",
+					"name" : "rospack_gensrv",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "run_tests::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-run_tests-RelWithDebInfo-038bd515031015cc5ffa.json",
+					"name" : "run_tests",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "shared_library::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-shared_library-RelWithDebInfo-9158a83b4cd63f0eba66.json",
+					"name" : "shared_library",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "simple_queue_test::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-simple_queue_test-RelWithDebInfo-c6986cdcba90a4f63ace.json",
+					"name" : "simple_queue_test",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "slam::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-slam-RelWithDebInfo-12ab36f5025a3a7a19d6.json",
+					"name" : "slam",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "test::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-test-RelWithDebInfo-18e6bac47e8a51873ee9.json",
+					"name" : "test",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "test-future::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-test-future-RelWithDebInfo-217e5e9e90bc85cb6970.json",
+					"name" : "test-future",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "test-results::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-test-results-RelWithDebInfo-9f104f59d90a58ca84a4.json",
+					"name" : "test-results",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "test-results-run::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-test-results-run-RelWithDebInfo-5f560ec8fb15b3cd6066.json",
+					"name" : "test-results-run",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "tests::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-tests-RelWithDebInfo-6a4c2ee9204f84da96a2.json",
+					"name" : "tests",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/raf/Programming/cs393r/projects/cs393r_starter/build",
+		"source" : "/home/raf/Programming/cs393r/projects/cs393r_starter"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 0
+	}
+}
