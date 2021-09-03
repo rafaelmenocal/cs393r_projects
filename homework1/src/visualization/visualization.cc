@@ -78,6 +78,15 @@ void DrawPoint(const Vector2f& p, uint32_t color, VisualizationMsg& msg) {
   msg.points.push_back(point);
 }
 
+// void DrawPointCloud(const std::vector<Eigen::Vector2f&> points, uint32_t color, VisualizationMsg& msg) {
+//   for (long unsigned int p = 0; p < points.size(); p++) {
+//     ColoredPoint2D point;
+//     SetPoint(points[p], &point.point);
+//     point.color = color;
+//     msg.points.push_back(point);
+//   }
+// }
+
 void DrawLine(const Vector2f& p0,
               const Vector2f& p1,
               uint32_t color,

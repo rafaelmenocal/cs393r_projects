@@ -40,6 +40,11 @@ void DrawPoint(const Eigen::Vector2f& p,
                uint32_t color,
                amrl_msgs::VisualizationMsg& msg);
 
+// // Add a point cloud to the visualization message.
+// void DrawPointCloud(const std::vector<Eigen::Vector2f&> points,
+//                uint32_t color,
+//                amrl_msgs::VisualizationMsg& msg);
+
 // Add a single line to the visualization message.
 void DrawLine(const Eigen::Vector2f& p0,
               const Eigen::Vector2f& p1,

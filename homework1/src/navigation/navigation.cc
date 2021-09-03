@@ -132,7 +132,8 @@ void Navigation::UpdateOdometry(const Vector2f& loc,
 // gets called in navigation_main.cc during ros::spinOnce() ? I think
 void Navigation::ObservePointCloud(const vector<Vector2f>& cloud,
                                    double time) {
-  point_cloud_ = cloud;                                     
+  point_cloud_ = cloud;
+  // ROS_INFO("cloud size = %ld", cloud.size());                                     
 }
 
 // conventient method to draw all aspects of the robot boundarys, wheels, etc
@@ -147,9 +148,25 @@ void DrawRobot(){
   return;
 }
 
+// conventient method to draw point cloud
+void DrawPointCloud(std::vector<Vector2f> cloud){
+  // visualization::DrawPointCloud(point_cloud_, 0x68ad7b, local_viz_msg_);
+  for (unsigned int p = 0; p < cloud.size(); p++){
+      visualization::DrawPoint(cloud[p], 0x68ad7b, local_viz_msg_);
+  }
+  return;
+}
+
+// First implementation: given point_cloud_ of obstacles from
+// robot, return distance to obstacle (straight line path)
+float DistanceToObstacle(std::vector<Vector2f> cloud)
+{
+  return 0.0;
+}
+
 // Given a horizontally moving robot and a vertical wall
 // Return the distance from the robot to the wall
-int Distance_To_Vert_Wall(Vector2f robot_loc, Vector2f Wall)
+float DistanceToVerticalWall(Vector2f robot_loc, Vector2f Wall)
 {
   return abs(Wall[0] - robot_loc[0]);
 }
@@ -185,31 +202,31 @@ void Navigation::Run() {
   // ---------------------------------------------------------
 
   DrawRobot();
-
   DrawTargetWall(nav_goal_loc_);
+  DrawPointCloud(point_cloud_);
  
   // Debugging Info:
   // ROS_INFO("Current Odom loc: (%f,%f)", odom_loc_.x(), odom_loc_.y());
   // ROS_INFO("Previous Odom loc: (%f,%f)", last_odom_loc_.x(), last_odom_loc_.y());
   // ROS_INFO("Odom Velocity: %f", odom_vel_);
   
+  
   // ** Change to: 1) accelerate if not at max speed, and there is distance left (how much?)
   // **            2) cruise if at max speed, and there is distance left (how much?)
   // **            3) Decelerate if not enough distance left (what if there is insufficient distance?)
   // drive to target wall and stop when the robot gets close (<= 0.1m)
-  if (Distance_To_Vert_Wall(robot_loc_, nav_goal_loc_) > 1.0) {
+  // if (DistanceToVerticalWall(robot_loc_, nav_goal_loc_) > 1.0) {
+  if (DistanceToObstacle(point_cloud_) > 1.0) {    
     drive_msg_.velocity = 5.0;
     // drive_msg_.curvature = 0.0;
   } else {
     drive_msg_.velocity = 0.0;
     ROS_INFO("Stopped");
     // drive_msg_.curvature = 0.0;
-    nav_complete_ = true;
   }
 
   // 1-D TOC Problem
-  // Next: remove target wall & robot_loc_ by using 
-  //       laser data at wall instead
+  // Next: Find distance to wall with zero curvature
   // Next: account for latency & plan to stop early
   // Next: account for motion along arcs
 
