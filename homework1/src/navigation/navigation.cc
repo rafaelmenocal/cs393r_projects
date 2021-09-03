@@ -214,10 +214,8 @@ void Navigation::Run() {
   // ** Change to: 1) accelerate if not at max speed, and there is distance left (how much?)
   // **            2) cruise if at max speed, and there is distance left (how much?)
   // **            3) Decelerate if not enough distance left (what if there is insufficient distance?)
-  // drive to target wall and stop when the robot gets close (<= 0.1m)
-  // if (DistanceToVerticalWall(robot_loc_, nav_goal_loc_) > 1.0) {
-  if (DistanceToObstacle(point_cloud_) > 1.0) {    
-    drive_msg_.velocity = 5.0;
+  if (DistanceToObstacle(point_cloud_) >= 0) {// 1.0) {    
+    drive_msg_.velocity = 1.0;
     // drive_msg_.curvature = 0.0;
   } else {
     drive_msg_.velocity = 0.0;
@@ -225,13 +223,25 @@ void Navigation::Run() {
     // drive_msg_.curvature = 0.0;
   }
 
-  // 1-D TOC Problem
-  // Next: Find distance to wall with zero curvature
-  // Next: account for latency & plan to stop early
-  // Next: account for motion along arcs
+  // ---------GROUP PLAN / COORDINATION-------------------------------
+  // max speed: 1 m/s
+  // max acceleration/deceleration: 4 m/s^2
+  // I) 1-D TOC (Drive up to and stop at an obstacle) Breakdown
+  //    1) Given Robot position/speed/(curvature = 0), predict position at next time step
+  //    2) Given point cloud, predict point cloud at next time step (assume curvature = 0)
+  //    3) Given a predicted robot's position and predicted point cloud, determine predicted distance (assume curvature = 0)
+  //    4) Given robot speed/acceleration/max speed, etc, determine the critical distance to stop (assume curvature = 0)
+  //    5) Given predicted distance to obstacle and critical distance to stop, decide to cruise, speed up, or stop (assume curvature = 0)
+  // ------
+  // II) 2-D TOC (along a given arc/curvature) Breakdown - same as above
+  // III) Iterate over all possible arcs/curvatures and score each arc based on: ...
+  // IV) Select the arc/curve/path with the best score
 
+  // Let's not forget the questions / write up!
 
+  // how to account for latency ?
   // ---------------------------------------------------------
+
   // Add timestamps to all messages.
   local_viz_msg_.header.stamp = ros::Time::now();
   global_viz_msg_.header.stamp = ros::Time::now();
