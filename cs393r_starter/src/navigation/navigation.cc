@@ -33,6 +33,7 @@
 #include "navigation.h"
 #include "visualization/visualization.h"
 #include <cstdlib>
+#include <cmath>
 
 using Eigen::Vector2f;
 using amrl_msgs::AckermannCurvatureDriveMsg;
@@ -67,7 +68,8 @@ Navigation::Navigation(const string& map_file, ros::NodeHandle* n) :
     robot_omega_(0),
     nav_complete_(true),
     nav_goal_loc_(0, 0),
-    nav_goal_angle_(0) {
+    nav_goal_angle_(0),
+    odom_vel_(0) {
   drive_pub_ = n->advertise<AckermannCurvatureDriveMsg>(
       "ackermann_curvature_drive", 1);
   viz_pub_ = n->advertise<VisualizationMsg>("visualization", 1);
@@ -91,15 +93,33 @@ void Navigation::UpdateLocation(const Eigen::Vector2f& loc, float angle) {
   robot_angle_ = angle;
 }
 
-// gets called in navigation_main.cc during ros::spinOnce() ? I think
+// Given the previous and current odometry readings
+// return the instantaneous velocity
+float GetOdomVelocity(Vector2f last_loc, Vector2f current_loc)
+{
+  // distance traveled in 1/20th of a second
+  return 20.0 * sqrt(pow(current_loc.y() - last_loc.y(),2) + pow(current_loc.x() - last_loc.x(),2));
+}
+
+// gets called in navigation_main.cc during ros::spinOnce()
 void Navigation::UpdateOdometry(const Vector2f& loc,
                                 float angle,
                                 const Vector2f& vel,
                                 float ang_vel) {
+  // update last_odom_loc_ and last_odom_angle_ before ovewriting 
+  // odom_loc_ and odom_angle_
+  if (odom_initialized_) {
+  last_odom_loc_ = odom_loc_;
+  last_odom_angle_ = odom_angle_;
+  }
+
   robot_omega_ = ang_vel;
   robot_vel_ = vel;
   odom_loc_ = loc;
   odom_angle_ = angle;
+
+  odom_vel_ = GetOdomVelocity(last_odom_loc_, odom_loc_);
+  
   if (!odom_initialized_) {
     odom_start_angle_ = angle;
     odom_start_loc_ = loc;
@@ -116,7 +136,7 @@ void Navigation::ObservePointCloud(const vector<Vector2f>& cloud,
 }
 
 // conventient method to draw all aspects of the robot boundarys, wheels, etc
-void Draw_Robot(){
+void DrawRobot(){
   // draw velocity/curve vector/path
   visualization::DrawPathOption(drive_msg_.curvature, drive_msg_.velocity, drive_msg_.curvature, local_viz_msg_);
   // draw robot boundaries
@@ -132,6 +152,17 @@ void Draw_Robot(){
 int Distance_To_Vert_Wall(Vector2f robot_loc, Vector2f Wall)
 {
   return abs(Wall[0] - robot_loc[0]);
+}
+
+// conventient method to draw target as a wall
+void DrawTargetWall(Vector2f target_loc_){
+    // visualize target as a vertical wall with a cross at the target point
+  visualization::DrawLine(target_loc_ + Vector2f(0, 10), 
+                          target_loc_ - Vector2f(0,10),
+                          0x68ad7b,
+                          global_viz_msg_);
+  visualization::DrawCross(target_loc_, 0.2, 0x68ad7b, global_viz_msg_);
+  return;
 }
 
 // gets called in navigation_main.cc during navigation_->Run()
@@ -153,36 +184,34 @@ void Navigation::Run() {
   // Eventually, you will have to set the control values to issue drive commands:
   // ---------------------------------------------------------
 
+  DrawRobot();
 
-  // Get actual velocity/direction of travel using odometry
-  // visualize direction of travel
-  Draw_Robot();
-
-  // visualize target as a vertical wall with a cross at the target point
-  visualization::DrawLine(nav_goal_loc_ + Vector2f(0, 10), 
-                          nav_goal_loc_ - Vector2f(0,10),
-                          0x68ad7b,
-                          global_viz_msg_);
-  visualization::DrawCross(nav_goal_loc_, 0.2, 0x68ad7b, global_viz_msg_);
+  DrawTargetWall(nav_goal_loc_);
+ 
+  // Debugging Info:
+  // ROS_INFO("Current Odom loc: (%f,%f)", odom_loc_.x(), odom_loc_.y());
+  // ROS_INFO("Previous Odom loc: (%f,%f)", last_odom_loc_.x(), last_odom_loc_.y());
+  // ROS_INFO("Odom Velocity: %f", odom_vel_);
   
   // ** Change to: 1) accelerate if not at max speed, and there is distance left (how much?)
   // **            2) cruise if at max speed, and there is distance left (how much?)
   // **            3) Decelerate if not enough distance left (what if there is insufficient distance?)
   // drive to target wall and stop when the robot gets close (<= 0.1m)
-  if (Distance_To_Vert_Wall(robot_loc_, nav_goal_loc_) > 0.1) {
-    drive_msg_.velocity = 2.0;
+  if (Distance_To_Vert_Wall(robot_loc_, nav_goal_loc_) > 1.0) {
+    drive_msg_.velocity = 5.0;
     // drive_msg_.curvature = 0.0;
   } else {
     drive_msg_.velocity = 0.0;
+    ROS_INFO("Stopped");
     // drive_msg_.curvature = 0.0;
     nav_complete_ = true;
   }
 
-  // Next: Use odometry for planning
+  // 1-D TOC Problem
+  // Next: remove target wall & robot_loc_ by using 
+  //       laser data at wall instead
+  // Next: account for latency & plan to stop early
   // Next: account for motion along arcs
-  // Next: account for latency
-
-  // last_odom_reading = odom_loc_;
 
 
   // ---------------------------------------------------------

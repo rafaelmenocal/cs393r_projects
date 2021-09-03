@@ -279,6 +279,8 @@ visualization/visualization.h
 /home/raf/Programming/cs393r/projects/cs393r_starter/src/navigation/visualization/visualization.h
 cstdlib
 -
+cmath
+-
 
 /home/raf/Programming/cs393r/projects/cs393r_starter/src/navigation/navigation.h
 vector

@@ -96,6 +96,11 @@ class Navigation {
   Eigen::Vector2f nav_goal_loc_;
   // Navigation goal angle.
   float nav_goal_angle_;
+
+  // --------- Added ------------
+  Eigen::Vector2f last_odom_loc_;
+  float last_odom_angle_;
+  float odom_vel_;
 };
 
 }  // namespace navigation
