@@ -178,6 +178,7 @@ void Navigation::Run() {
     nav_complete_ = true;
   }
 
+  // Next: Use odometry for planning
   // Next: account for motion along arcs
   // Next: account for latency
 
