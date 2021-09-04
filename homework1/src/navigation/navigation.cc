@@ -151,8 +151,8 @@ void DrawRobot(){
 // conventient method to draw point cloud
 void DrawPointCloud(std::vector<Vector2f> cloud){
   // visualization::DrawPointCloud(point_cloud_, 0x68ad7b, local_viz_msg_);
-  for (unsigned int p = 0; p < cloud.size(); p++){
-      visualization::DrawPoint(cloud[p], 0x68ad7b, local_viz_msg_);
+  for (const auto& point : cloud){
+      visualization::DrawPoint(point, 0x68ad7b, local_viz_msg_);
   }
   return;
 }
