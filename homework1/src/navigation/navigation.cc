@@ -208,7 +208,7 @@ void Navigation::Run() {
   // Debugging Info:
   // ROS_INFO("Current Odom loc: (%f,%f)", odom_loc_.x(), odom_loc_.y());
   // ROS_INFO("Previous Odom loc: (%f,%f)", last_odom_loc_.x(), last_odom_loc_.y());
-  // ROS_INFO("Odom Velocity: %f", odom_vel_);
+  ROS_INFO("Odom Velocity: %f", odom_vel_);
   
   
   // ** Change to: 1) accelerate if not at max speed, and there is distance left (how much?)
@@ -225,6 +225,19 @@ void Navigation::Run() {
 
   // ---------GROUP PLAN / COORDINATION-------------------------------
   // max speed: 1 m/s
+  // -- Car dimensions.
+// car_width = 0.281
+// car_length = 0.535
+// car_height = 0.15;
+
+// -- Location of the robot's rear wheel axle relative to the center of the body.
+// rear_axle_offset = -0.162
+// laser_loc = Vector3(0.2, 0, 0.15)
+
+// -- Kinematic and dynamic constraints for the car.
+// min_turn_radius = 0.98
+// max_speed = 5.0
+// max_accel = 5.0
   // max acceleration/deceleration: 4 m/s^2
   // I) 1-D TOC (Drive up to and stop at an obstacle) Breakdown
   //    1) Given Robot position/speed/(curvature = 0), predict position at next time step
@@ -240,6 +253,7 @@ void Navigation::Run() {
   // Let's not forget the questions / write up!
 
   // how to account for latency ?
+  // add global constant for acceleration
   // ---------------------------------------------------------
 
   // Add timestamps to all messages.
