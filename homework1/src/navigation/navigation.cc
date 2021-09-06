@@ -224,20 +224,18 @@ void Navigation::Run() {
   }
 
   // ---------GROUP PLAN / COORDINATION-------------------------------
-  // max speed: 1 m/s
   // -- Car dimensions.
-// car_width = 0.281
-// car_length = 0.535
-// car_height = 0.15;
-
-// -- Location of the robot's rear wheel axle relative to the center of the body.
-// rear_axle_offset = -0.162
-// laser_loc = Vector3(0.2, 0, 0.15)
-
-// -- Kinematic and dynamic constraints for the car.
-// min_turn_radius = 0.98
-// max_speed = 5.0
-// max_accel = 5.0
+  // car_width = 0.281
+  // car_length = 0.535
+  // car_height = 0.15;
+  // -- Location of the robot's rear wheel axle relative to the center of the body.
+  // rear_axle_offset = -0.162
+  // laser_loc = Vector3(0.2, 0, 0.15)
+  // -- Kinematic and dynamic constraints for the car.
+  // min_turn_radius = 0.98
+  // max_speed = 5.0
+  // max_accel = 5.0
+  // max speed: 1 m/s
   // max acceleration/deceleration: 4 m/s^2
   // I) 1-D TOC (Drive up to and stop at an obstacle) Breakdown
   //    1) Given Robot position/speed/(curvature = 0), predict position at next time step
@@ -245,7 +243,7 @@ void Navigation::Run() {
   //    3) Given a predicted robot's position and predicted point cloud, determine predicted distance (assume curvature = 0)
   //    4) Given robot speed/acceleration/max speed, etc, determine the critical distance to stop (assume curvature = 0)
   //    5) Given predicted distance to obstacle and critical distance to stop, decide to cruise, speed up, or stop (assume curvature = 0)
-  // ------
+  // Goal: Drive up to and stop a wall by Friday (10 Sep)
   // II) 2-D TOC (along a given arc/curvature) Breakdown - same as above
   // III) Iterate over all possible arcs/curvatures and score each arc based on: ...
   // IV) Select the arc/curve/path with the best score
