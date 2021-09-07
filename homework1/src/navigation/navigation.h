@@ -44,6 +44,16 @@ struct PathOption {
 class Navigation {
  public:
 
+  // --------- Added ------------
+  Eigen::Vector2f last_odom_loc_ = Eigen::Vector2f(0.0, 0.0);
+  float last_odom_angle_ = 0.0;
+  float odom_vel_  = 0.0;
+  float last_odom_vel_ = 0.0;
+  float odom_accel_ = 0.0;
+  float max_vel_ = 1.0;
+  float max_accel_ = 4.0;
+  float update_frequency_ = 20.0;
+
    // Constructor
   explicit Navigation(const std::string& map_file, ros::NodeHandle* n);
 
@@ -97,10 +107,6 @@ class Navigation {
   // Navigation goal angle.
   float nav_goal_angle_;
 
-  // --------- Added ------------
-  Eigen::Vector2f last_odom_loc_;
-  float last_odom_angle_;
-  float odom_vel_;
 };
 
 }  // namespace navigation

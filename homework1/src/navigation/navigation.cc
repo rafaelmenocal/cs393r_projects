@@ -68,8 +68,7 @@ Navigation::Navigation(const string& map_file, ros::NodeHandle* n) :
     robot_omega_(0),
     nav_complete_(true),
     nav_goal_loc_(0, 0),
-    nav_goal_angle_(0),
-    odom_vel_(0) {
+    nav_goal_angle_(0) {
   drive_pub_ = n->advertise<AckermannCurvatureDriveMsg>(
       "ackermann_curvature_drive", 1);
   viz_pub_ = n->advertise<VisualizationMsg>("visualization", 1);
@@ -79,6 +78,7 @@ Navigation::Navigation(const string& map_file, ros::NodeHandle* n) :
       "map", "navigation_global");
   InitRosHeader("base_link", &drive_msg_.header);
 }
+
 
 void Navigation::SetNavGoal(const Vector2f& loc, float angle) {
   nav_complete_ = false;
@@ -101,6 +101,14 @@ float GetOdomVelocity(Vector2f last_loc, Vector2f current_loc)
   return 20.0 * sqrt(pow(current_loc.y() - last_loc.y(),2) + pow(current_loc.x() - last_loc.x(),2));
 }
 
+// Given the previous and current odometry readings
+// return the instantaneous velocity
+float GetOdomAcceleration(float last_vel, float current_vel)
+{
+  // change in velocity over 1/20th of a second
+  return (last_vel - current_vel) / 20.0;
+}
+
 // gets called in navigation_main.cc during ros::spinOnce()
 void Navigation::UpdateOdometry(const Vector2f& loc,
                                 float angle,
@@ -117,8 +125,10 @@ void Navigation::UpdateOdometry(const Vector2f& loc,
   robot_vel_ = vel;
   odom_loc_ = loc;
   odom_angle_ = angle;
-
+ 
+  last_odom_vel_ = odom_vel_;
   odom_vel_ = GetOdomVelocity(last_odom_loc_, odom_loc_);
+  odom_accel_ = GetOdomAcceleration(last_odom_vel_, odom_vel_);
   
   if (!odom_initialized_) {
     odom_start_angle_ = angle;
@@ -209,6 +219,8 @@ void Navigation::Run() {
   // ROS_INFO("Current Odom loc: (%f,%f)", odom_loc_.x(), odom_loc_.y());
   // ROS_INFO("Previous Odom loc: (%f,%f)", last_odom_loc_.x(), last_odom_loc_.y());
   ROS_INFO("Odom Velocity: %f", odom_vel_);
+  ROS_INFO("Odom Acceleration: %f", odom_accel_);
+
   
   
   // ** Change to: 1) accelerate if not at max speed, and there is distance left (how much?)
