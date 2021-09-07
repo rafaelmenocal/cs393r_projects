@@ -67,4 +67,8 @@ include_directories(${GTEST_INCLUDE_DIRS})
 ADD_EXECUTABLE(simple_object_avoidance_test
                src/navigation/object_avoidance_test.cc)
 
-target_link_libraries(simple_object_avoidance_test ${GTEST_LIBRARIES} pthread)
+ADD_LIBRARY(obstacle_avoidance
+            src/navigation/object_avoidance.cc)
+  
+TARGET_LINK_LIBRARIES(simple_object_avoidance_test
+                      obstacle_avoidance ${GTEST_LIBRARIES} pthread)
