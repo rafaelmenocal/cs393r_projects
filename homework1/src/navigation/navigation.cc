@@ -147,10 +147,26 @@ void Navigation::ObservePointCloud(const vector<Vector2f>& cloud,
 }
 
 // conventient method to draw all aspects of the robot boundarys, wheels, etc
-void DrawRobot(){
+void DrawRobot(float width, float length, float axle_offset){
   // draw velocity/curve vector/path
   visualization::DrawPathOption(drive_msg_.curvature, drive_msg_.velocity, drive_msg_.curvature, local_viz_msg_);
-  // draw robot boundaries
+  // draw robot boundaries - left side, right side, front, back
+  visualization::DrawLine(Vector2f(-axle_offset - (length/2.0), width/2.0), 
+                          Vector2f(-axle_offset + (length/2.0), width/2.0),
+                          0x68ad7b,
+                          local_viz_msg_);
+  visualization::DrawLine(Vector2f(-axle_offset - (length/2.0), -width/2.0), 
+                          Vector2f(-axle_offset + (length/2.0), -width/2.0),
+                          0x68ad7b,
+                          local_viz_msg_);
+  visualization::DrawLine(Vector2f(-axle_offset - (length/2.0), width/2.0), 
+                          Vector2f(-axle_offset - (length/2.0), -width/2.0),
+                          0x68ad7b,
+                          local_viz_msg_);
+  visualization::DrawLine(Vector2f(-axle_offset + (length/2.0), width/2.0),
+                          Vector2f(-axle_offset + (length/2.0), -width/2.0),
+                          0x68ad7b,
+                          local_viz_msg_);
   // draw robot wheels
   // draw robot safety margin
   // draw laser rangefinder
@@ -161,18 +177,31 @@ void DrawRobot(){
 // conventient method to draw point cloud
 void DrawPointCloud(std::vector<Vector2f> cloud){
   // visualization::DrawPointCloud(point_cloud_, 0x68ad7b, local_viz_msg_);
-  for (unsigned int p = 0; p < cloud.size(); p++){
-      visualization::DrawPoint(cloud[p], 0x68ad7b, local_viz_msg_);
+  for (const auto& point : cloud){
+      visualization::DrawPoint(point, 0x68ad7b, local_viz_msg_);
   }
   return;
 }
 
+// First implementation: given point from
+// robot, return distance to obstacle (straight line path)
+float DistanceToPoint(Vector2f point)
+{
+  return sqrt(pow(point.x(),2) + pow(point.y(),2));
+}
+
 // First implementation: given point_cloud_ of obstacles from
 // robot, return distance to obstacle (straight line path)
-float DistanceToObstacle(std::vector<Vector2f> cloud)
+float DistanceToPointCloud(std::vector<Vector2f> cloud)
 {
-  return 0.0;
+  float min_distance = 11.0;
+  for (unsigned int p = 0; p < cloud.size(); p++){
+    min_distance = min(DistanceToPoint(cloud[p]),min_distance);
+  }
+  return min_distance;
 }
+
+
 
 // Given a horizontally moving robot and a vertical wall
 // Return the distance from the robot to the wall
@@ -211,22 +240,23 @@ void Navigation::Run() {
   // Eventually, you will have to set the control values to issue drive commands:
   // ---------------------------------------------------------
 
-  DrawRobot();
-  DrawTargetWall(nav_goal_loc_);
+  DrawRobot(car_width_, car_length_, rear_axle_offset_);
+  // DrawTargetWall(nav_goal_loc_);
   DrawPointCloud(point_cloud_);
  
   // Debugging Info:
   // ROS_INFO("Current Odom loc: (%f,%f)", odom_loc_.x(), odom_loc_.y());
   // ROS_INFO("Previous Odom loc: (%f,%f)", last_odom_loc_.x(), last_odom_loc_.y());
-  ROS_INFO("Odom Velocity: %f", odom_vel_);
-  ROS_INFO("Odom Acceleration: %f", odom_accel_);
+  // ROS_INFO("Odom Velocity: %f", odom_vel_);
+  // ROS_INFO("Odom Acceleration: %f", odom_accel_);
 
+  float distance_to_point_cloud = DistanceToPointCloud(point_cloud_);
   
-  
+  ROS_INFO("Distance to Point Cloud: %f", distance_to_point_cloud);
   // ** Change to: 1) accelerate if not at max speed, and there is distance left (how much?)
   // **            2) cruise if at max speed, and there is distance left (how much?)
   // **            3) Decelerate if not enough distance left (what if there is insufficient distance?)
-  if (DistanceToObstacle(point_cloud_) >= 0) {// 1.0) {    
+  if (distance_to_point_cloud >= 0.0) {// 1.0) {    
     drive_msg_.velocity = 1.0;
     // drive_msg_.curvature = 0.0;
   } else {
