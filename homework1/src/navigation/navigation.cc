@@ -34,6 +34,7 @@
 #include "visualization/visualization.h"
 #include <cstdlib>
 #include <cmath>
+#include "object_avoidance.h"
 
 using Eigen::Vector2f;
 using amrl_msgs::AckermannCurvatureDriveMsg;
@@ -175,10 +176,10 @@ void DrawRobot(float width, float length, float axle_offset){
 }
 
 // conventient method to draw point cloud
-void DrawPointCloud(std::vector<Vector2f> cloud){
+void DrawPointCloud(std::vector<Vector2f> cloud, uint32_t color=0x68ad7b){
   // visualization::DrawPointCloud(point_cloud_, 0x68ad7b, local_viz_msg_);
   for (const auto& point : cloud){
-      visualization::DrawPoint(point, 0x68ad7b, local_viz_msg_);
+      visualization::DrawPoint(point, color, local_viz_msg_);
   }
   return;
 }
@@ -200,8 +201,6 @@ float DistanceToPointCloud(std::vector<Vector2f> cloud)
   }
   return min_distance;
 }
-
-
 
 // Given a horizontally moving robot and a vertical wall
 // Return the distance from the robot to the wall
@@ -258,14 +257,21 @@ void Navigation::Run() {
   // **            3) Decelerate if not enough distance left (what if there is insufficient distance?)
   if (distance_to_point_cloud >= 0.0) {// 1.0) {    
     drive_msg_.velocity = 1.0;
-    // drive_msg_.curvature = 0.0;
+    drive_msg_.curvature = 0.0;
   } else {
     drive_msg_.velocity = 0.0;
     ROS_INFO("Stopped");
-    drive_msg_.curvature = 0.0;
   }
+  drive_msg_.curvature = 0.1;
 
-  visualization::DrawArc(Vector2f{})
+  const auto& points = object_avoidance::FindCollisionPoints(
+    point_cloud_, 1 / drive_msg_.curvature, car_width_, car_length_, 2 * car_length_ / 3);
+
+  DrawPointCloud(points, 0x000000);
+  const auto shortest_dist = object_avoidance::FindShortestDistance(
+    point_cloud_, 1 / drive_msg_.curvature, car_width_, car_length_, 2 * car_length_ / 3);
+  ROS_INFO("Shortest Dist to Point Cloud: %f", shortest_dist);
+  //visualization::DrawArc(Vector2f{0, 1.0})
   // ---------GROUP PLAN / COORDINATION-------------------------------
   // -- Car dimensions.
   // car_width = 0.281
