@@ -16,10 +16,26 @@ inline float acceleration_distance(float init_velocity, float final_velocity, fl
 
 /*  This function returns the time it takes to travel a certain distance given
     initial velocity and acceleration.
+    Assumes positive velocity.
 */
 inline float travel_time(float distance, float init_velocity, float acceleration) {
     if (acceleration == 0) {
         return distance / init_velocity;
+    }
+
+    // 1/2 * at^2 + ut - s = 0
+    float x1 = ((-1 * init_velocity) + sqrt(pow(init_velocity, 2) - 2 * acceleration * (-1 * distance))) / (2 * acceleration);
+    float x2 = ((-1 * init_velocity) - sqrt(pow(init_velocity, 2) - 2 * acceleration * (-1 * distance))) / (2 * acceleration);
+
+    if (x1 < 0 && x2 >= 0) {
+        //Shouldn't happen, x2 should be negative when init_velocity is positive
+        return x2;
+    } else if (x2 < 0 && x1 >= 0) {
+        return x1;
+    } else {
+        //This shouldn't happen; with positive velocity, x2 should be negative, 
+        //so in this case they're both negative
+        return -1;
     }
 }
 
@@ -68,5 +84,20 @@ inline float* 1DTOC(float init_velocity, float max_velocity, float accel, float 
         results[0] = acceleration_time(init_velocity, max_velocity, accel);
         results[1] = travel_time(dist - acc_and_dec_length, max_velocity, 0);
         results[2] = acceleration_time(max_velocity, 0, decel);
+    }
+    return results;
+}
+
+/*  Given a distance to travel, the current velocity, the maximum velocity, 
+    and the possible acceleration and deceleration, this function returns 
+    whether the vehicle should speed up, continue at this speed, or slow down.
+*/
+inline int next_step_predictor(float velocity, float max_velocity, float accel, float decel, float dist_left) {
+    if (acceleration_distance(velocity, 0, decel) <= dist_left) {
+        return 2; //This means slow down. Replace with an enum
+    } else if (velocity < max_velocity) {
+        return 0; //speed up
+    } else {
+        return 1; //maintain speed
     }
 }
