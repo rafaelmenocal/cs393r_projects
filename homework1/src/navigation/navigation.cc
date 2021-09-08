@@ -54,7 +54,7 @@ AckermannCurvatureDriveMsg drive_msg_; // velocity, curvature
 // Epsilon value for handling limited numerical precision.
 const float kEpsilon = 1e-5;
 float critical_time = 0.1;
-float latency = 0.0;
+float latency = -0.5;
 float speed = 0.0;
 float accel = 0.0;
 std::vector <Vector2f> proj_point_cloud_;
@@ -158,7 +158,7 @@ void Navigation::ObservePointCloud(const vector<Vector2f>& cloud,
   // ROS_INFO("cloud size = %ld", cloud.size());                                     
 }
 
-// conventient method to draw all aspects of the robot boundarys, wheels, etc
+// convenient method to draw all aspects of the robot boundarys, wheels, etc
 void DrawRobot(float width, float length, float axle_offset, float safety_margin){
   // draw velocity/curve vector/path
   visualization::DrawPathOption(drive_msg_.curvature, drive_msg_.velocity, drive_msg_.curvature, local_viz_msg_);
@@ -202,11 +202,10 @@ void DrawRobot(float width, float length, float axle_offset, float safety_margin
   return;
 }
 
-// conventient method to draw point cloud
-void DrawPointCloud(std::vector<Vector2f> cloud){
-  // visualization::DrawPointCloud(point_cloud_, 0x68ad7b, local_viz_msg_);
+// convenient method to draw point cloud
+void DrawPointCloud(std::vector<Vector2f> cloud, uint32_t color){
   for (unsigned int p = 0; p < cloud.size(); p++){
-      visualization::DrawPoint(cloud[p], 0x68ad7b, local_viz_msg_);
+      visualization::DrawPoint(cloud[p], color, local_viz_msg_);
   }
   return;
 }
@@ -255,7 +254,18 @@ float VectorAccelToAccel(Vector2f accel){
   return sqrt(pow(accel.x(),2) + pow(accel.y(),2));
 }
 
-std::vector <Vector2f> ProjectPointCloud2D(std::vector <Vector2f> point_cloud_, Vector2f velocity, float critical_time, float latency){
+std::vector <Vector2f> ProjectPointCloud1D(std::vector <Vector2f> point_cloud_, Vector2f velocity, float critical_time, float latency){
+  vector<Vector2f> proj_point_cloud_;
+  proj_point_cloud_.clear();
+  for (unsigned int p = 0; p < point_cloud_.size(); p++){
+    Vector2f proj_point(point_cloud_[p]);
+    proj_point = proj_point - (critical_time + latency) * velocity;
+    proj_point_cloud_.push_back(proj_point);
+  }
+  return proj_point_cloud_;
+}
+
+std::vector <Vector2f> ProjectPointCloud2D(std::vector <Vector2f> point_cloud_, Vector2f velocity, float critical_time, float latency, float angle){
   vector<Vector2f> proj_point_cloud_;
   proj_point_cloud_.clear();
   for (unsigned int p = 0; p < point_cloud_.size(); p++){
@@ -304,7 +314,7 @@ void Navigation::Run() {
   DrawRobot(car_width_, car_length_,
             rear_axle_offset_, car_safety_margin_);
   // DrawTargetWall(nav_goal_loc_);
-  DrawPointCloud(point_cloud_);
+  DrawPointCloud(point_cloud_, 0x68ad7b);
  
   // Debugging Info:
   // ROS_INFO("Current Odom loc: (%f,%f)", odom_loc_.x(), odom_loc_.y());
@@ -322,10 +332,14 @@ void Navigation::Run() {
   ROS_INFO("speed = %f", speed);
   ROS_INFO("accel = %f", accel);
   ROS_INFO("critical_time = %f", critical_time);
+  ROS_INFO("odom_angle_ = %f", odom_angle_);
+  ROS_INFO("odom_start_angle_ = %f", odom_start_angle_);
+  ROS_INFO("nav_goal_loc_ = (%f, %f)", nav_goal_loc_.x(),nav_goal_loc_.y());
 
   // calculate projected point cloud
-  proj_point_cloud_ = ProjectPointCloud2D(point_cloud_, odom_vel_, critical_time, latency);
-  // DrawPointCloud(proj_point_cloud_);
+  proj_point_cloud_ = ProjectPointCloud1D(point_cloud_, odom_vel_, critical_time, latency);
+  // proj_point_cloud_ = ProjectPointCloud2D(point_cloud_, odom_vel_, critical_time, latency, odom_angle_);
+  // DrawPointCloud(proj_point_cloud_, 0xFF0000FF);
   if (ProjectedPointCloudCollision(proj_point_cloud_, car_width_, car_length_,
                                    rear_axle_offset_, car_safety_margin_)) {
     drive_msg_.velocity = 0.0;
@@ -333,7 +347,7 @@ void Navigation::Run() {
     else{ROS_INFO("Status: Stopping");}
   } else {
     drive_msg_.velocity = max_vel_;
-      ROS_INFO("Status: Driving");    
+    ROS_INFO("Status: Driving");    
   }
 
   // ** Change to: 1) accelerate if not at max speed, and there is distance left (how much?)
