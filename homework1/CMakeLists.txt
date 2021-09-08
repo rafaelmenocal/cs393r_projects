@@ -60,16 +60,3 @@ ADD_EXECUTABLE(eigen_tutorial
 
 ADD_EXECUTABLE(simple_queue_test
                src/navigation/simple_queue_test.cc)
-
-# Locate GTest
-find_package(GTest REQUIRED)
-include_directories(${GTEST_INCLUDE_DIRS})
-
-ADD_EXECUTABLE(simple_object_avoidance_test
-               src/navigation/object_avoidance_test.cc)
-
-ADD_LIBRARY(obstacle_avoidance
-            src/navigation/object_avoidance.cc)
-  
-TARGET_LINK_LIBRARIES(simple_object_avoidance_test
-                      obstacle_avoidance ${GTEST_LIBRARIES} pthread)
