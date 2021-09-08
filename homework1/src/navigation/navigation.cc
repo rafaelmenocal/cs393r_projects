@@ -232,9 +232,10 @@ void Navigation::Run() {
   } else {
     drive_msg_.velocity = 0.0;
     ROS_INFO("Stopped");
-    // drive_msg_.curvature = 0.0;
+    drive_msg_.curvature = 0.0;
   }
 
+  visualization::DrawArc(Vector2f{})
   // ---------GROUP PLAN / COORDINATION-------------------------------
   // -- Car dimensions.
   // car_width = 0.281
