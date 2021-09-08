@@ -54,10 +54,12 @@ AckermannCurvatureDriveMsg drive_msg_; // velocity, curvature
 // Epsilon value for handling limited numerical precision.
 const float kEpsilon = 1e-5;
 float critical_time = 0.1;
-float latency = -0.5;
+float latency = 0.0;
 float speed = 0.0;
 float accel = 0.0;
+float del_angle_ = 0.0;
 std::vector <Vector2f> proj_point_cloud_;
+std::vector <Vector2f> drawn_point_cloud_;
 } //namespace
 
 namespace navigation {
@@ -119,29 +121,31 @@ void Navigation::UpdateOdometry(const Vector2f& loc,
                                 float angle,
                                 const Vector2f& vel,
                                 float ang_vel) {
-  // update last_odom_loc_ and last_odom_angle_ before ovewriting 
-  // odom_loc_ and odom_angle_
+
   if (odom_initialized_) {
-  last_odom_loc_ = odom_loc_;
-  last_odom_angle_ = odom_angle_;
+    last_odom_loc_ = odom_loc_;
+    last_odom_angle_ = odom_angle_;
   }
 
   robot_omega_ = ang_vel;
   robot_vel_ = vel;
   odom_loc_ = loc;
   odom_angle_ = angle;
- 
-  last_odom_vel_ = odom_vel_;
-  odom_vel_ = GetOdomVelocity(last_odom_loc_, odom_loc_, update_frequency_);
-  odom_accel_ = GetOdomAcceleration(last_odom_vel_, odom_vel_, update_frequency_);
-  
-  ROS_INFO("-----------------------------------------");
-  ROS_INFO("odom_loc_ = (%f, %f)", odom_loc_.x(), odom_loc_.y());
-  ROS_INFO("last_odom_loc_ = (%f, %f)", last_odom_loc_.x(), last_odom_loc_.y());
-  ROS_INFO("odom_vel_ = (%f, %f)", odom_vel_.x(),odom_vel_.y());
-  ROS_INFO("last_odom_vel = (%f, %f)",last_odom_vel_.x(), last_odom_vel_.y());
-  ROS_INFO("odom_accel_ = (%f, %f)", odom_accel_.x(), odom_accel_.y());
 
+  if (odom_initialized_) {
+    last_odom_vel_ = odom_vel_;
+    odom_vel_ = GetOdomVelocity(last_odom_loc_, odom_loc_, update_frequency_);
+    odom_accel_ = GetOdomAcceleration(last_odom_vel_, odom_vel_, update_frequency_);
+    
+    ROS_INFO("-----------------------------------------");
+    ROS_INFO("odom_loc_ = (%f, %f)", odom_loc_.x(), odom_loc_.y());
+    ROS_INFO("last_odom_loc_ = (%f, %f)", last_odom_loc_.x(), last_odom_loc_.y());
+    ROS_INFO("odom_vel_ = (%f, %f)", odom_vel_.x(),odom_vel_.y());
+    ROS_INFO("last_odom_vel = (%f, %f)",last_odom_vel_.x(), last_odom_vel_.y());
+    ROS_INFO("odom_accel_ = (%f, %f)", odom_accel_.x(), odom_accel_.y());
+  }
+ 
+  
   if (!odom_initialized_) {
     odom_start_angle_ = angle;
     odom_start_loc_ = loc;
@@ -154,8 +158,7 @@ void Navigation::UpdateOdometry(const Vector2f& loc,
 // gets called in navigation_main.cc during ros::spinOnce() ? I think
 void Navigation::ObservePointCloud(const vector<Vector2f>& cloud,
                                    double time) {
-  point_cloud_ = cloud;
-  // ROS_INFO("cloud size = %ld", cloud.size());                                     
+  point_cloud_ = cloud;                                     
 }
 
 // convenient method to draw all aspects of the robot boundarys, wheels, etc
@@ -235,13 +238,8 @@ float DistanceToVerticalWall(Vector2f robot_loc, Vector2f Wall)
   return abs(Wall[0] - robot_loc[0]);
 }
 
-// conventient method to draw target as a wall
-void DrawTargetWall(Vector2f target_loc_){
-    // visualize target as a vertical wall with a cross at the target point
-  visualization::DrawLine(target_loc_ + Vector2f(0, 10), 
-                          target_loc_ - Vector2f(0,10),
-                          0x68ad7b,
-                          global_viz_msg_);
+// convenient method to draw target as a wall
+void DrawTarget(Vector2f target_loc_){
   visualization::DrawCross(target_loc_, 0.2, 0x68ad7b, global_viz_msg_);
   return;
 }
@@ -267,10 +265,13 @@ std::vector <Vector2f> ProjectPointCloud1D(std::vector <Vector2f> point_cloud_, 
 
 std::vector <Vector2f> ProjectPointCloud2D(std::vector <Vector2f> point_cloud_, Vector2f velocity, float critical_time, float latency, float angle){
   vector<Vector2f> proj_point_cloud_;
+  angle = angle * M_PI / 180.0;
+  ROS_INFO("del_angle_rad_ = %f", angle);
+  Eigen::Rotation2Df rot(angle);
   proj_point_cloud_.clear();
   for (unsigned int p = 0; p < point_cloud_.size(); p++){
     Vector2f proj_point(point_cloud_[p]);
-    proj_point = proj_point - (critical_time + latency) * velocity;
+    proj_point = (rot * proj_point) - (critical_time + latency) * velocity;
     proj_point_cloud_.push_back(proj_point);
   }
   return proj_point_cloud_;
@@ -286,16 +287,17 @@ bool ProjectedPointCloudCollision(std::vector <Vector2f> proj_point_cloud_, floa
   for (unsigned int p = 0; p < proj_point_cloud_.size(); p++){
     Vector2f proj_point(proj_point_cloud_[p]);
     if (PointWithinSafetyMargin(proj_point, width, length, axle_offset, safety_margin)){
+      //draw a red point where identified point is within safety margin
+      visualization::DrawPoint(proj_point, 0xeb3434, local_viz_msg_);
+      ROS_INFO("Collision Alert: Collision Detected!");
       return true;
     }
   }
   return false;
 }
 
-// gets called in navigation_main.cc during navigation_->Run()
 void Navigation::Run() {
-  // This function gets called 20 times a second to form the control loop.
-  
+
   // Clear previous visualizations.
   visualization::ClearVisualizationMsg(local_viz_msg_);
   visualization::ClearVisualizationMsg(global_viz_msg_);
@@ -304,42 +306,30 @@ void Navigation::Run() {
   if (!odom_initialized_) return;
   
   // The control iteration goes here. 
-  // Feel free to make helper functions to structure the control appropriately.
-  
-  // The latest observed point cloud is accessible via "point_cloud_"
-
-  // Eventually, you will have to set the control values to issue drive commands:
   // ---------------------------------------------------------
 
-  DrawRobot(car_width_, car_length_,
-            rear_axle_offset_, car_safety_margin_);
-  // DrawTargetWall(nav_goal_loc_);
-  DrawPointCloud(point_cloud_, 0x68ad7b);
- 
-  // Debugging Info:
-  // ROS_INFO("Current Odom loc: (%f,%f)", odom_loc_.x(), odom_loc_.y());
-  // ROS_INFO("Previous Odom loc: (%f,%f)", last_odom_loc_.x(), last_odom_loc_.y());
-  // ROS_INFO("Odom Velocity: %f", odom_vel_);
-  // ROS_INFO("Odom Acceleration: %f", odom_accel_);
-
-  // float distance_to_point_cloud = DistanceToPointCloud(point_cloud_);
-  
-  // ROS_INFO("Distance to Point Cloud: %f", distance_to_point_cloud);
   speed = VelocityToSpeed(odom_vel_);
   accel = VectorAccelToAccel(odom_accel_);
   critical_time =  speed / max_accel_;
-  
+  del_angle_ = odom_angle_ - last_odom_angle_;
+
+  // drawn_point_cloud_ = ProjectPointCloud2D(point_cloud_, odom_vel_, 1/update_frequency_, latency, del_angle_);
+  // DrawPointCloud(drawn_point_cloud_, 0x68ad7b); // green 
+  // DrawPointCloud(point_cloud_, 0x44def2); //light blue
+  DrawRobot(car_width_, car_length_,
+            rear_axle_offset_, car_safety_margin_);
+  DrawTarget(nav_goal_loc_);
+
   ROS_INFO("speed = %f", speed);
   ROS_INFO("accel = %f", accel);
   ROS_INFO("critical_time = %f", critical_time);
   ROS_INFO("odom_angle_ = %f", odom_angle_);
+  ROS_INFO("last_odom_angle_ = %f", last_odom_angle_);
+  ROS_INFO("del_angle_ = %f", del_angle_);
   ROS_INFO("odom_start_angle_ = %f", odom_start_angle_);
   ROS_INFO("nav_goal_loc_ = (%f, %f)", nav_goal_loc_.x(),nav_goal_loc_.y());
 
-  // calculate projected point cloud
-  proj_point_cloud_ = ProjectPointCloud1D(point_cloud_, odom_vel_, critical_time, latency);
-  // proj_point_cloud_ = ProjectPointCloud2D(point_cloud_, odom_vel_, critical_time, latency, odom_angle_);
-  // DrawPointCloud(proj_point_cloud_, 0xFF0000FF);
+  proj_point_cloud_ = ProjectPointCloud2D(point_cloud_, odom_vel_, critical_time, latency, del_angle_);
   if (ProjectedPointCloudCollision(proj_point_cloud_, car_width_, car_length_,
                                    rear_axle_offset_, car_safety_margin_)) {
     drive_msg_.velocity = 0.0;
@@ -347,35 +337,11 @@ void Navigation::Run() {
     else{ROS_INFO("Status: Stopping");}
   } else {
     drive_msg_.velocity = max_vel_;
+    drive_msg_.curvature = -0.5;
     ROS_INFO("Status: Driving");    
   }
 
-  // ** Change to: 1) accelerate if not at max speed, and there is distance left (how much?)
-  // **            2) cruise if at max speed, and there is distance left (how much?)
-  // **            3) Decelerate if not enough distance left (what if there is insufficient distance?) 
-  // if (distance_to_point_cloud >= 0.0) {// 1.0) {    
-  //   drive_msg_.velocity = 1.0;
-  //   // drive_msg_.curvature = 0.0;
-  // } else {
-  //   drive_msg_.velocity = 0.0;
-  //   ROS_INFO("Stopped");
-  //   // drive_msg_.curvature = 0.0;
-  // }
-
   // ---------GROUP PLAN / COORDINATION-------------------------------
-  // -- Car dimensions.
-  // car_width = 0.281
-  // car_length = 0.535
-  // car_height = 0.15;
-  // -- Location of the robot's rear wheel axle relative to the center of the body.
-  // rear_axle_offset = -0.162
-  // laser_loc = Vector3(0.2, 0, 0.15)
-  // -- Kinematic and dynamic constraints for the car.
-  // min_turn_radius = 0.98
-  // max_speed = 5.0
-  // max_accel = 5.0
-  // max speed: 1 m/s
-  // max acceleration/deceleration: 4 m/s^2
   // I) 1-D TOC (Drive up to and stop at an obstacle) Breakdown
   //    1) Given Robot position/speed/(curvature = 0), predict position at next time step
   //    2) Given point cloud, predict point cloud at next time step (assume curvature = 0)
@@ -388,9 +354,6 @@ void Navigation::Run() {
   // IV) Select the arc/curve/path with the best score
 
   // Let's not forget the questions / write up!
-
-  // how to account for latency ?
-  // add global constant for acceleration
   // ---------------------------------------------------------
 
   // Add timestamps to all messages.
