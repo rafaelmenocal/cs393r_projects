@@ -47,9 +47,9 @@ class Navigation {
   // --------- Added ------------
   Eigen::Vector2f last_odom_loc_ = Eigen::Vector2f(0.0, 0.0);
   float last_odom_angle_ = 0.0;
-  float odom_vel_  = 0.0;
-  float last_odom_vel_ = 0.0;
-  float odom_accel_ = 0.0;
+  Eigen::Vector2f odom_vel_  = Eigen::Vector2f(0.0, 0.0);
+  Eigen::Vector2f last_odom_vel_ = Eigen::Vector2f(0.0, 0.0);
+  Eigen::Vector2f odom_accel_ = Eigen::Vector2f(0.0, 0.0);
   // -- Kinematic and dynamic constraints for the car.
   float max_vel_ = 1.0;
   float max_accel_ = 4.0;
@@ -58,6 +58,7 @@ class Navigation {
   float car_width_ = 0.281;
   float car_length_ = 0.535;
   float car_height_ = 0.15;
+  float car_safety_margin_ = 0.5;
   // -- Location of the robot's rear wheel axle relative to the center of the body.
   float rear_axle_offset_ = -0.162;
   Eigen::Vector2f laser_loc_ = Eigen::Vector2f(0.2, 0.15);
