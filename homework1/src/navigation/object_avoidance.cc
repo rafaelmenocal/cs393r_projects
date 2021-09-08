@@ -49,11 +49,13 @@ namespace object_avoidance {
             // collision along inside part of the car
             if (inner_radius <= distance && distance < middle_radius) {
                 float_t x = GetDistance(0, (0.5 * width), distance, turning_radius);
+                // Return the arclength between the collision point on the car and the obstacle.
                 return 2 * distance * asin(
                     object_avoidance::GetDistance(x, width / 2, point[0], point[1]) / (2 * turning_radius));
             // collision along front of the car
             } else if (middle_radius <= distance && distance < outter_radius) {
                 float_t y = -(GetDistance(0, -(width - wheelbase) / 2, distance, wheelbase) - turning_radius);
+                // Return the arclength between the collision point on the car and the obstacle.
                 return 2 * distance * asin(
                     object_avoidance::GetDistance(wheelbase + (width - wheelbase) / 2, y, point[0], point[1]) / (2 * turning_radius));
             }
