@@ -44,24 +44,32 @@ namespace object_avoidance {
         float_t outter_radius = GetDistance(-(width / 2), -wheelbase, turning_radius + (width / 2),
                                             (length - wheelbase) / 2.0);
 
+        float_t shortest_distance = 10000000;
+
         for (const auto& point : point_cloud) {
             float_t distance = GetDistance(0, turning_radius, point[0], point[1]);
             // collision along inside part of the car
             if (inner_radius <= distance && distance < middle_radius) {
                 float_t x = GetDistance(0, (0.5 * width), distance, turning_radius);
                 // Return the arclength between the collision point on the car and the obstacle.
-                return 2 * distance * asin(
+                float_t arc_length = 2 * distance * asin(
                     object_avoidance::GetDistance(x, width / 2, point[0], point[1]) / (2 * turning_radius));
+                if (arc_length < shortest_distance) {
+                    shortest_distance = arc_length;
+                }
+
             // collision along front of the car
             } else if (middle_radius <= distance && distance < outter_radius) {
                 float_t y = -(GetDistance(0, -(width - wheelbase) / 2, distance, wheelbase) - turning_radius);
                 // Return the arclength between the collision point on the car and the obstacle.
-                return 2 * distance * asin(
+                float_t arc_length = 2 * distance * asin(
                     object_avoidance::GetDistance(wheelbase + (width - wheelbase) / 2, y, point[0], point[1]) / (2 * turning_radius));
+                if (arc_length < shortest_distance) {
+                    shortest_distance = arc_length;
+                }
             }
         }
-
-        return 0.0;
+        return shortest_distance;
     };
     
 }
