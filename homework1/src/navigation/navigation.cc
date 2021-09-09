@@ -162,14 +162,6 @@ void Navigation::ObservePointCloud(const vector<Vector2f>& cloud,
 }
 
 
-// convenient method to draw point cloud
-void DrawPointCloud(std::vector<Vector2f> cloud, uint32_t color){
-  for (unsigned int p = 0; p < cloud.size(); p++){
-      visualization::DrawPoint(cloud[p], color, local_viz_msg_);
-  }
-  return;
-}
-
 // First implementation: given point from
 // robot, return distance to obstacle (straight line path)
 float DistanceToPoint(Vector2f point)
@@ -271,8 +263,8 @@ void Navigation::Run() {
   del_angle_ = odom_angle_ - last_odom_angle_;
 
   // drawn_point_cloud_ = ProjectPointCloud2D(point_cloud_, odom_vel_, 1/update_frequency_, latency, del_angle_);
-  // DrawPointCloud(drawn_point_cloud_, 0x68ad7b); // green 
-  // DrawPointCloud(point_cloud_, 0x44def2); //light blue
+  // visualization::DrawPointCloud(drawn_point_cloud_, 0x68ad7b); // green 
+  // visualization::DrawPointCloud(point_cloud_, 0x44def2); //light blue
   visualization::DrawRobot(car_width_, car_length_, rear_axle_offset_,
                            car_safety_margin_, drive_msg_, local_viz_msg_);
   DrawTarget(nav_goal_loc_);
