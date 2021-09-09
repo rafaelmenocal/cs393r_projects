@@ -58,14 +58,109 @@ float latency = 0.0;
 float speed = 0.0;
 float accel = 0.0;
 float del_angle_ = 0.0;
-std::vector <Vector2f> proj_point_cloud_;
-std::vector <Vector2f> drawn_point_cloud_;
+std::vector<Vector2f> proj_point_cloud_;
+std::vector<Vector2f> drawn_point_cloud_;
 } //namespace
 
 namespace navigation {
 
-// Navigation Constructor called when Navigation instantiated in
-// navigation_main.cc
+
+// First implementation: given point from
+// robot, return distance to obstacle (straight line path)
+float DistanceToPoint(const Vector2f& point) {
+  return sqrt(pow(point.x(),2) + pow(point.y(),2));
+}
+
+// First implementation: given point_cloud_ of obstacles from
+// robot, return distance to obstacle (straight line path)
+float DistanceToPointCloud(const std::vector<Vector2f>& cloud) {
+  float min_distance = 11.0;
+  for (const auto& point : cloud){
+    min_distance = min(DistanceToPoint(point), min_distance);
+  }
+  return min_distance;
+}
+
+// Given a horizontally moving robot and a vertical wall
+// Return the distance from the robot to the wall
+float DistanceToVerticalWall(const Vector2f& robot_loc, const Vector2f& Wall) {
+  return abs(Wall[0] - robot_loc[0]);
+}
+
+float VelocityToSpeed(const Vector2f& velocity) {
+  return sqrt(pow(velocity.x(), 2) + pow(velocity.y(), 2));
+}
+
+float VectorAccelToAccel(const Vector2f& accel) {
+  return sqrt(pow(accel.x(), 2) + pow(accel.y(), 2));
+}
+
+std::vector<Vector2f> ProjectPointCloud1D(const std::vector<Vector2f>& point_cloud_,
+                                           const Vector2f& velocity,
+                                           float critical_time, float latency){
+  vector<Vector2f> proj_point_cloud_;
+  for (const auto& point : point_cloud_){
+    Vector2f proj_point = point - (critical_time + latency) * velocity;
+    proj_point_cloud_.push_back(proj_point);
+  }
+  return proj_point_cloud_;
+}
+
+std::vector<Vector2f> ProjectPointCloud2D(const std::vector<Vector2f>& point_cloud_,
+                                          const Vector2f& velocity, float critical_time,
+                                          float latency, float angle){
+  vector<Vector2f> proj_point_cloud_;
+  angle = angle * M_PI / 180.0;
+  ROS_INFO("del_angle_rad_ = %f", angle);
+  Eigen::Rotation2Df rot(angle);
+  for (const auto& point : point_cloud_){
+    Vector2f proj_point = (rot * point) - (critical_time + latency) * velocity;
+    proj_point_cloud_.push_back(proj_point);
+  }
+  return proj_point_cloud_;
+}
+
+bool PointWithinSafetyMargin(const Vector2f& proj_point,
+                             float width, float length,
+                             float axle_offset, float safety_margin) {
+  bool within_length = (proj_point.x() < (-axle_offset + (length/2.0) + safety_margin)) && (proj_point.x() > (-axle_offset - (length/2.0) - safety_margin));
+  bool within_width = (proj_point.y() < (safety_margin + width/2.0)) && (proj_point.y() > (-safety_margin - width/2.0));
+  return within_length && within_width;
+}
+
+bool ProjectedPointCloudCollision(const std::vector<Vector2f>& proj_point_cloud_,
+                                  float width, float length,
+                                  float axle_offset, float safety_margin) {
+  for (const auto& projected_point: proj_point_cloud_){
+    if (PointWithinSafetyMargin(projected_point, width, length, axle_offset, safety_margin)){
+      //draw a red point where identified point is within safety margin
+      visualization::DrawPoint(projected_point, 0xeb3434, local_viz_msg_);
+      ROS_INFO("Collision Alert: Collision Detected!");
+      return true;
+    }
+  }
+  return false;
+}
+
+// Given the previous and current odometry readings
+// return the instantaneous velocity
+Vector2f GetOdomVelocity(const Vector2f& last_loc,
+                         const Vector2f& current_loc,
+                         float update_freq) {
+  // distance traveled in 1/20th of a second
+  return update_freq * Vector2f(current_loc.x() - last_loc.x(), current_loc.y() - last_loc.y());
+}
+
+// Given the previous and current odometry readings
+// return the instantaneous velocity
+Vector2f GetOdomAcceleration(const Vector2f& last_vel,
+                             const Vector2f& current_vel,
+                             float update_freq) {
+  // change in velocity over 1/20th of a second
+  return (last_vel - current_vel) / update_freq;
+}
+
+// Navigation Constructor called when Navigation instantiated in navigation_main.cc
 Navigation::Navigation(const string& map_file, ros::NodeHandle* n) :
     odom_initialized_(false),
     localization_initialized_(false),
@@ -86,7 +181,6 @@ Navigation::Navigation(const string& map_file, ros::NodeHandle* n) :
   InitRosHeader("base_link", &drive_msg_.header);
 }
 
-
 void Navigation::SetNavGoal(const Vector2f& loc, float angle) {
   nav_complete_ = false;
   nav_goal_loc_ = loc;
@@ -98,22 +192,6 @@ void Navigation::UpdateLocation(const Eigen::Vector2f& loc, float angle) {
   localization_initialized_ = true;
   robot_loc_ = loc;
   robot_angle_ = angle;
-}
-
-// Given the previous and current odometry readings
-// return the instantaneous velocity
-Vector2f GetOdomVelocity(Vector2f last_loc, Vector2f current_loc, float update_freq)
-{
-  // distance traveled in 1/20th of a second
-  return update_freq * Vector2f(current_loc.x() - last_loc.x(), current_loc.y() - last_loc.y());
-}
-
-// Given the previous and current odometry readings
-// return the instantaneous velocity
-Vector2f GetOdomAcceleration(Vector2f last_vel, Vector2f current_vel, float update_freq)
-{
-  // change in velocity over 1/20th of a second
-  return (last_vel - current_vel) / update_freq;
 }
 
 // gets called in navigation_main.cc during ros::spinOnce()
@@ -145,7 +223,6 @@ void Navigation::UpdateOdometry(const Vector2f& loc,
     ROS_INFO("odom_accel_ = (%f, %f)", odom_accel_.x(), odom_accel_.y());
   }
  
-  
   if (!odom_initialized_) {
     odom_start_angle_ = angle;
     odom_start_loc_ = loc;
@@ -161,141 +238,6 @@ void Navigation::ObservePointCloud(const vector<Vector2f>& cloud,
   point_cloud_ = cloud;                                     
 }
 
-// convenient method to draw all aspects of the robot boundarys, wheels, etc
-void DrawRobot(float width, float length, float axle_offset, float safety_margin){
-  // draw velocity/curve vector/path
-  visualization::DrawPathOption(drive_msg_.curvature, drive_msg_.velocity, drive_msg_.curvature, local_viz_msg_);
-  // draw robot boundaries - left side, right side, front, back
-  visualization::DrawLine(Vector2f(-axle_offset - (length/2.0), width/2.0), 
-                          Vector2f(-axle_offset + (length/2.0), width/2.0),
-                          0x68ad7b,
-                          local_viz_msg_);
-  visualization::DrawLine(Vector2f(-axle_offset - (length/2.0), -width/2.0), 
-                          Vector2f(-axle_offset + (length/2.0), -width/2.0),
-                          0x68ad7b,
-                          local_viz_msg_);
-  visualization::DrawLine(Vector2f(-axle_offset - (length/2.0), width/2.0), 
-                          Vector2f(-axle_offset - (length/2.0), -width/2.0),
-                          0x68ad7b,
-                          local_viz_msg_);
-  visualization::DrawLine(Vector2f(-axle_offset + (length/2.0), width/2.0),
-                          Vector2f(-axle_offset + (length/2.0), -width/2.0),
-                          0x68ad7b,
-                          local_viz_msg_);
-  // draw robot wheels
-  // draw robot safety margin
-  visualization::DrawLine(Vector2f(-axle_offset - (length/2.0) - safety_margin, safety_margin + width/2.0), 
-                          Vector2f(-axle_offset + (length/2.0) + safety_margin, safety_margin + width/2.0),
-                          0x68ad7b,
-                          local_viz_msg_);
-  visualization::DrawLine(Vector2f(-axle_offset - (length/2.0) - safety_margin, -safety_margin-width/2.0), 
-                          Vector2f(-axle_offset + (length/2.0) + safety_margin, -safety_margin-width/2.0),
-                          0x68ad7b,
-                          local_viz_msg_);
-  visualization::DrawLine(Vector2f(-axle_offset - (length/2.0) - safety_margin, safety_margin+width/2.0), 
-                          Vector2f(-axle_offset - (length/2.0) - safety_margin, -safety_margin-width/2.0),
-                          0x68ad7b,
-                          local_viz_msg_);
-  visualization::DrawLine(Vector2f(-axle_offset + (length/2.0) + safety_margin, safety_margin+width/2.0),
-                          Vector2f(-axle_offset + (length/2.0) + safety_margin, -safety_margin-width/2.0),
-                          0x68ad7b,
-                          local_viz_msg_);
-  // draw laser rangefinder
-  // draw possible arc paths
-  return;
-}
-
-// convenient method to draw point cloud
-void DrawPointCloud(std::vector<Vector2f> cloud, uint32_t color){
-  for (unsigned int p = 0; p < cloud.size(); p++){
-      visualization::DrawPoint(cloud[p], color, local_viz_msg_);
-  }
-  return;
-}
-
-// First implementation: given point from
-// robot, return distance to obstacle (straight line path)
-float DistanceToPoint(Vector2f point)
-{
-  return sqrt(pow(point.x(),2) + pow(point.y(),2));
-}
-
-// First implementation: given point_cloud_ of obstacles from
-// robot, return distance to obstacle (straight line path)
-float DistanceToPointCloud(std::vector<Vector2f> cloud)
-{
-  float min_distance = 11.0;
-  for (unsigned int p = 0; p < cloud.size(); p++){
-    min_distance = min(DistanceToPoint(cloud[p]),min_distance);
-  }
-  return min_distance;
-}
-
-// Given a horizontally moving robot and a vertical wall
-// Return the distance from the robot to the wall
-float DistanceToVerticalWall(Vector2f robot_loc, Vector2f Wall)
-{
-  return abs(Wall[0] - robot_loc[0]);
-}
-
-// convenient method to draw target as a wall
-void DrawTarget(Vector2f target_loc_){
-  visualization::DrawCross(target_loc_, 0.2, 0x68ad7b, global_viz_msg_);
-  return;
-}
-
-float VelocityToSpeed(Vector2f velocity){
-  return sqrt(pow(velocity.x(),2) + pow(velocity.y(),2));
-}
-
-float VectorAccelToAccel(Vector2f accel){
-  return sqrt(pow(accel.x(),2) + pow(accel.y(),2));
-}
-
-std::vector <Vector2f> ProjectPointCloud1D(std::vector <Vector2f> point_cloud_, Vector2f velocity, float critical_time, float latency){
-  vector<Vector2f> proj_point_cloud_;
-  proj_point_cloud_.clear();
-  for (unsigned int p = 0; p < point_cloud_.size(); p++){
-    Vector2f proj_point(point_cloud_[p]);
-    proj_point = proj_point - (critical_time + latency) * velocity;
-    proj_point_cloud_.push_back(proj_point);
-  }
-  return proj_point_cloud_;
-}
-
-std::vector <Vector2f> ProjectPointCloud2D(std::vector <Vector2f> point_cloud_, Vector2f velocity, float critical_time, float latency, float angle){
-  vector<Vector2f> proj_point_cloud_;
-  angle = angle * M_PI / 180.0;
-  ROS_INFO("del_angle_rad_ = %f", angle);
-  Eigen::Rotation2Df rot(angle);
-  proj_point_cloud_.clear();
-  for (unsigned int p = 0; p < point_cloud_.size(); p++){
-    Vector2f proj_point(point_cloud_[p]);
-    proj_point = (rot * proj_point) - (critical_time + latency) * velocity;
-    proj_point_cloud_.push_back(proj_point);
-  }
-  return proj_point_cloud_;
-}
-
-bool PointWithinSafetyMargin(Vector2f proj_point, float width, float length, float axle_offset, float safety_margin){
-  bool within_length = (proj_point.x() < (-axle_offset + (length/2.0) + safety_margin)) && (proj_point.x() > (-axle_offset - (length/2.0) - safety_margin));
-  bool within_width = (proj_point.y() < (safety_margin + width/2.0)) && (proj_point.y() > (-safety_margin - width/2.0));
-  return within_length && within_width;
-}
-
-bool ProjectedPointCloudCollision(std::vector <Vector2f> proj_point_cloud_, float width, float length, float axle_offset, float safety_margin){
-  for (unsigned int p = 0; p < proj_point_cloud_.size(); p++){
-    Vector2f proj_point(proj_point_cloud_[p]);
-    if (PointWithinSafetyMargin(proj_point, width, length, axle_offset, safety_margin)){
-      //draw a red point where identified point is within safety margin
-      visualization::DrawPoint(proj_point, 0xeb3434, local_viz_msg_);
-      ROS_INFO("Collision Alert: Collision Detected!");
-      return true;
-    }
-  }
-  return false;
-}
-
 void Navigation::Run() {
 
   // Clear previous visualizations.
@@ -303,7 +245,9 @@ void Navigation::Run() {
   visualization::ClearVisualizationMsg(global_viz_msg_);
 
   // If odometry has not been initialized, we can't do anything.
-  if (!odom_initialized_) return;
+  if (!odom_initialized_) {
+    return;
+  }
   
   // The control iteration goes here. 
   // ---------------------------------------------------------
@@ -314,11 +258,11 @@ void Navigation::Run() {
   del_angle_ = odom_angle_ - last_odom_angle_;
 
   // drawn_point_cloud_ = ProjectPointCloud2D(point_cloud_, odom_vel_, 1/update_frequency_, latency, del_angle_);
-  // DrawPointCloud(drawn_point_cloud_, 0x68ad7b); // green 
-  // DrawPointCloud(point_cloud_, 0x44def2); //light blue
-  DrawRobot(car_width_, car_length_,
-            rear_axle_offset_, car_safety_margin_);
-  DrawTarget(nav_goal_loc_);
+  // visualization::DrawPointCloud(drawn_point_cloud_, 0x68ad7b); // green 
+  // visualization::DrawPointCloud(point_cloud_, 0x44def2); //light blue
+  visualization::DrawRobot(car_width_, car_length_, rear_axle_offset_,
+                           car_safety_margin_, drive_msg_, local_viz_msg_);
+  visualization::DrawTarget(nav_goal_loc_, local_viz_msg_);
 
   ROS_INFO("speed = %f", speed);
   ROS_INFO("accel = %f", accel);
@@ -329,12 +273,17 @@ void Navigation::Run() {
   ROS_INFO("odom_start_angle_ = %f", odom_start_angle_);
   ROS_INFO("nav_goal_loc_ = (%f, %f)", nav_goal_loc_.x(),nav_goal_loc_.y());
 
-  proj_point_cloud_ = ProjectPointCloud2D(point_cloud_, odom_vel_, critical_time, latency, del_angle_);
+  proj_point_cloud_ = ProjectPointCloud2D(point_cloud_, odom_vel_,
+                                          critical_time, latency, del_angle_);
   if (ProjectedPointCloudCollision(proj_point_cloud_, car_width_, car_length_,
                                    rear_axle_offset_, car_safety_margin_)) {
     drive_msg_.velocity = 0.0;
-    if (speed == 0.0){ROS_INFO("Status: Stopped");}
-    else{ROS_INFO("Status: Stopping");}
+    if (speed == 0.0){
+      ROS_INFO("Status: Stopped");
+    }
+    else {
+      ROS_INFO("Status: Stopping");
+    }
   } else {
     drive_msg_.velocity = max_vel_;
     drive_msg_.curvature = -0.5;
