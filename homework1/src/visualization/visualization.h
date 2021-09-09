@@ -19,11 +19,12 @@
 */
 //========================================================================
 
+#include <string>
 #include <stdint.h>
 
-#include <string>
-
 #include "eigen3/Eigen/Dense"
+
+#include "amrl_msgs/AckermannCurvatureDriveMsg.h"
 #include "amrl_msgs/VisualizationMsg.h"
 
 namespace visualization {
@@ -74,5 +75,9 @@ void DrawPathOption(const float curvature,
                     const float distance,
                     const float clearance,
                     amrl_msgs::VisualizationMsg& msg);
+
+// convenient method to draw all aspects of the robot boundarys, wheels, etc
+void DrawRobot(float width, float length, float axle_offset, float safety_margin,
+  const amrl_msgs::AckermannCurvatureDriveMsg& drive_msg, amrl_msgs::VisualizationMsg& viz_msg);
 
 }  // namespace visualization

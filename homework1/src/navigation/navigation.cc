@@ -161,49 +161,6 @@ void Navigation::ObservePointCloud(const vector<Vector2f>& cloud,
   point_cloud_ = cloud;                                     
 }
 
-// convenient method to draw all aspects of the robot boundarys, wheels, etc
-void DrawRobot(float width, float length, float axle_offset, float safety_margin){
-  // draw velocity/curve vector/path
-  visualization::DrawPathOption(drive_msg_.curvature, drive_msg_.velocity, drive_msg_.curvature, local_viz_msg_);
-  // draw robot boundaries - left side, right side, front, back
-  visualization::DrawLine(Vector2f(-axle_offset - (length/2.0), width/2.0), 
-                          Vector2f(-axle_offset + (length/2.0), width/2.0),
-                          0x68ad7b,
-                          local_viz_msg_);
-  visualization::DrawLine(Vector2f(-axle_offset - (length/2.0), -width/2.0), 
-                          Vector2f(-axle_offset + (length/2.0), -width/2.0),
-                          0x68ad7b,
-                          local_viz_msg_);
-  visualization::DrawLine(Vector2f(-axle_offset - (length/2.0), width/2.0), 
-                          Vector2f(-axle_offset - (length/2.0), -width/2.0),
-                          0x68ad7b,
-                          local_viz_msg_);
-  visualization::DrawLine(Vector2f(-axle_offset + (length/2.0), width/2.0),
-                          Vector2f(-axle_offset + (length/2.0), -width/2.0),
-                          0x68ad7b,
-                          local_viz_msg_);
-  // draw robot wheels
-  // draw robot safety margin
-  visualization::DrawLine(Vector2f(-axle_offset - (length/2.0) - safety_margin, safety_margin + width/2.0), 
-                          Vector2f(-axle_offset + (length/2.0) + safety_margin, safety_margin + width/2.0),
-                          0x68ad7b,
-                          local_viz_msg_);
-  visualization::DrawLine(Vector2f(-axle_offset - (length/2.0) - safety_margin, -safety_margin-width/2.0), 
-                          Vector2f(-axle_offset + (length/2.0) + safety_margin, -safety_margin-width/2.0),
-                          0x68ad7b,
-                          local_viz_msg_);
-  visualization::DrawLine(Vector2f(-axle_offset - (length/2.0) - safety_margin, safety_margin+width/2.0), 
-                          Vector2f(-axle_offset - (length/2.0) - safety_margin, -safety_margin-width/2.0),
-                          0x68ad7b,
-                          local_viz_msg_);
-  visualization::DrawLine(Vector2f(-axle_offset + (length/2.0) + safety_margin, safety_margin+width/2.0),
-                          Vector2f(-axle_offset + (length/2.0) + safety_margin, -safety_margin-width/2.0),
-                          0x68ad7b,
-                          local_viz_msg_);
-  // draw laser rangefinder
-  // draw possible arc paths
-  return;
-}
 
 // convenient method to draw point cloud
 void DrawPointCloud(std::vector<Vector2f> cloud, uint32_t color){
@@ -316,8 +273,8 @@ void Navigation::Run() {
   // drawn_point_cloud_ = ProjectPointCloud2D(point_cloud_, odom_vel_, 1/update_frequency_, latency, del_angle_);
   // DrawPointCloud(drawn_point_cloud_, 0x68ad7b); // green 
   // DrawPointCloud(point_cloud_, 0x44def2); //light blue
-  DrawRobot(car_width_, car_length_,
-            rear_axle_offset_, car_safety_margin_);
+  visualization::DrawRobot(car_width_, car_length_, rear_axle_offset_,
+                           car_safety_margin_, drive_msg_, local_viz_msg_);
   DrawTarget(nav_goal_loc_);
 
   ROS_INFO("speed = %f", speed);

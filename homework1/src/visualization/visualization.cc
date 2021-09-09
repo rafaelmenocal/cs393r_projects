@@ -19,18 +19,21 @@
 */
 //========================================================================
 
+#include "visualization.h"
+
 #include <string>
 
 #include "eigen3/Eigen/Dense"
-#include "amrl_msgs/Pose2Df.h"
+
+#include "amrl_msgs/AckermannCurvatureDriveMsg.h"
 #include "amrl_msgs/ColoredArc2D.h"
 #include "amrl_msgs/ColoredLine2D.h"
-#include "amrl_msgs/PathVisualization.h"
 #include "amrl_msgs/ColoredPoint2D.h"
+#include "amrl_msgs/PathVisualization.h"
+#include "amrl_msgs/Pose2Df.h"
 #include "amrl_msgs/VisualizationMsg.h"
 #include "ros/ros.h"
 
-#include "visualization.h"
 
 using Eigen::Vector2f;
 using amrl_msgs::ColoredArc2D;
@@ -147,4 +150,52 @@ void DrawPathOption(const float curvature,
   option.clearance = clearance;
   msg.path_options.push_back(option);
 }
+
+// convenient method to draw all aspects of the robot boundarys, wheels, etc
+void DrawRobot(
+  float width, float length, float axle_offset, float safety_margin,
+  const amrl_msgs::AckermannCurvatureDriveMsg& drive_msg, VisualizationMsg& viz_msg){
+  // draw velocity/curve vector/path
+  visualization::DrawPathOption(
+    drive_msg.curvature, drive_msg.velocity, drive_msg.curvature, viz_msg);
+  // draw robot boundaries - left side, right side, front, back
+  visualization::DrawLine(Vector2f(-axle_offset - (length/2.0), width/2.0), 
+                          Vector2f(-axle_offset + (length/2.0), width/2.0),
+                          0x68ad7b,
+                          viz_msg);
+  visualization::DrawLine(Vector2f(-axle_offset - (length/2.0), -width/2.0), 
+                          Vector2f(-axle_offset + (length/2.0), -width/2.0),
+                          0x68ad7b,
+                          viz_msg);
+  visualization::DrawLine(Vector2f(-axle_offset - (length/2.0), width/2.0), 
+                          Vector2f(-axle_offset - (length/2.0), -width/2.0),
+                          0x68ad7b,
+                          viz_msg);
+  visualization::DrawLine(Vector2f(-axle_offset + (length/2.0), width/2.0),
+                          Vector2f(-axle_offset + (length/2.0), -width/2.0),
+                          0x68ad7b,
+                          viz_msg);
+  // draw robot wheels
+  // draw robot safety margin
+  visualization::DrawLine(Vector2f(-axle_offset - (length/2.0) - safety_margin, safety_margin + width/2.0), 
+                          Vector2f(-axle_offset + (length/2.0) + safety_margin, safety_margin + width/2.0),
+                          0x68ad7b,
+                          viz_msg);
+  visualization::DrawLine(Vector2f(-axle_offset - (length/2.0) - safety_margin, -safety_margin-width/2.0), 
+                          Vector2f(-axle_offset + (length/2.0) + safety_margin, -safety_margin-width/2.0),
+                          0x68ad7b,
+                          viz_msg);
+  visualization::DrawLine(Vector2f(-axle_offset - (length/2.0) - safety_margin, safety_margin+width/2.0), 
+                          Vector2f(-axle_offset - (length/2.0) - safety_margin, -safety_margin-width/2.0),
+                          0x68ad7b,
+                          viz_msg);
+  visualization::DrawLine(Vector2f(-axle_offset + (length/2.0) + safety_margin, safety_margin+width/2.0),
+                          Vector2f(-axle_offset + (length/2.0) + safety_margin, -safety_margin-width/2.0),
+                          0x68ad7b,
+                          viz_msg);
+  // draw laser rangefinder
+  // draw possible arc paths
+  return;
+}
+
 }  // namespace visualization
