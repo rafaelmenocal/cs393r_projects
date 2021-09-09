@@ -80,4 +80,6 @@ void DrawPathOption(const float curvature,
 void DrawRobot(float width, float length, float axle_offset, float safety_margin,
   const amrl_msgs::AckermannCurvatureDriveMsg& drive_msg, amrl_msgs::VisualizationMsg& viz_msg);
 
+void DrawTarget(const Eigen::Vector2f& target_loc_, amrl_msgs::VisualizationMsg& msg);
+
 }  // namespace visualization

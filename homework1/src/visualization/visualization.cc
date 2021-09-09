@@ -197,4 +197,11 @@ void DrawRobot(
   return;
 }
 
+// convenient method to draw target as a wall
+void DrawTarget(const Vector2f& target_loc_, VisualizationMsg& msg){
+  visualization::DrawCross(target_loc_, 0.2, 0x68ad7b, msg);
+  return;
+}
+
+
 }  // namespace visualization
