@@ -22,7 +22,7 @@ namespace path_planner {
             num_c_paths_(num_c_paths)
     {
         for (int i = 1; i < num_c_paths_; i++) {
-            curvatures_.push_back((float(i) / num_c_paths));
+            curvatures_.push_back(-1 + ( 2 * float(i)) / num_c_paths);
         }
     };
 
@@ -41,7 +41,7 @@ namespace path_planner {
         candidate_paths_.clear();
         // Loop over each potential path/curvature
         for (const auto& curvature : curvatures_) {
-            visualization::DrawPathOption(curvature, 1.0, 0.0, msg);
+            visualization::DrawPathOption(curvature, 5.0, 0.0, msg);
             // Find all the point in the cloud which would collide with this path which
             // 10m.
             const auto& points = obstacle_avoidance::FindCollisionPoints(
@@ -55,7 +55,7 @@ namespace path_planner {
                 points, 1 / curvature, vehicle_width_,
                 vehicle_length_, 2 * vehicle_length_ / 3, msg);
 
-            candidate_paths_.push_back(candidate_path{curvature, furthest_point.furthest_point, furthest_point.free_path_length});
+            candidate_paths_.push_back(candidate_path{curvature, furthest_point.furthest_point, furthest_point.free_path_length, furthest_point.average_distance});
         }
     }
 
@@ -64,10 +64,8 @@ namespace path_planner {
         float_t best_curvature = 0.0;
 
         for (const auto& path : candidate_paths_) {
-            auto dist = - 1 / sqrt(pow(5 - path.furthest_point[0], 2) + pow(path.furthest_point[1], 2));
-
-            float_t score =  path.free_path_length;
-                std::cout << dist << " " << path.free_path_length << " " << path.curvature << std::endl;
+            auto dist = sqrt(pow(5 - path.furthest_point[0], 2) + pow(path.furthest_point[1], 2));
+            float_t score =  100 * path.free_path_length - 20.0 * dist - 5.0 * path.average_distance;
             if (score > best_score) {
                 best_score = score;
                 best_curvature = path.curvature;

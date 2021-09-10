@@ -12,6 +12,7 @@ namespace obstacle_avoidance {
     struct shortest_dist {
         Eigen::Vector2f furthest_point;
         float_t free_path_length;
+        float_t average_distance;
     };
 
     // Loop through all points in point cloud and determine which points the car will

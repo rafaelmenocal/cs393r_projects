@@ -16,6 +16,7 @@ namespace path_planner {
         float_t curvature;
         Eigen::Vector2f furthest_point;
         float_t free_path_length;
+        float_t average_distance;
     };
 
     class PathPlanner {
