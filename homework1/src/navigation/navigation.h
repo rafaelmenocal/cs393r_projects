@@ -23,6 +23,8 @@
 
 #include "eigen3/Eigen/Dense"
 
+#include "path_planner.h"
+
 #ifndef NAVIGATION_H
 #define NAVIGATION_H
 
@@ -58,7 +60,7 @@ class Navigation {
   float car_width_ = 0.281;
   float car_length_ = 0.535;
   float car_height_ = 0.15;
-  float car_safety_margin_ = 0.5;
+  float car_safety_margin_ = 0.0;
   // -- Location of the robot's rear wheel axle relative to the center of the body.
   float rear_axle_offset_ = -0.162;
   Eigen::Vector2f laser_loc_ = Eigen::Vector2f(0.2, 0.15);
@@ -117,6 +119,8 @@ class Navigation {
   Eigen::Vector2f nav_goal_loc_;
   // Navigation goal angle.
   float nav_goal_angle_;
+
+  std::unique_ptr<path_planner::PathPlanner> path_planner_;
 
 };
 

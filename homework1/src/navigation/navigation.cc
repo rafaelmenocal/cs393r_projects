@@ -31,9 +31,11 @@
 #include "shared/util/timer.h"
 #include "shared/ros/ros_helpers.h"
 #include "navigation.h"
+#include "obstacle_avoidance.h"
 #include "visualization/visualization.h"
 #include <cstdlib>
 #include <cmath>
+#include "path_planner.h"
 
 using Eigen::Vector2f;
 using amrl_msgs::AckermannCurvatureDriveMsg;
@@ -54,7 +56,7 @@ AckermannCurvatureDriveMsg drive_msg_; // velocity, curvature
 // Epsilon value for handling limited numerical precision.
 const float kEpsilon = 1e-5;
 float critical_time = 0.1;
-float latency = 0.0;
+float latency = 0.2;
 float speed = 0.0;
 float accel = 0.0;
 float del_angle_ = 0.0;
@@ -179,6 +181,14 @@ Navigation::Navigation(const string& map_file, ros::NodeHandle* n) :
   global_viz_msg_ = visualization::NewVisualizationMessage(
       "map", "navigation_global");
   InitRosHeader("base_link", &drive_msg_.header);
+  path_planner_.reset(
+    new path_planner::PathPlanner(
+      Vector2f(10, 0),
+      car_width_ + car_safety_margin_,
+      car_length_ + car_safety_margin_,
+      2 * (car_length_ + car_safety_margin_) / 3,
+      10));
+
 }
 
 void Navigation::SetNavGoal(const Vector2f& loc, float angle) {
@@ -271,12 +281,14 @@ void Navigation::Run() {
   ROS_INFO("last_odom_angle_ = %f", last_odom_angle_);
   ROS_INFO("del_angle_ = %f", del_angle_);
   ROS_INFO("odom_start_angle_ = %f", odom_start_angle_);
-  ROS_INFO("nav_goal_loc_ = (%f, %f)", nav_goal_loc_.x(),nav_goal_loc_.y());
+  ROS_INFO("nav_goal_loc_ = (%f, %f)", nav_goal_loc_.x(), nav_goal_loc_.y());
+
 
   proj_point_cloud_ = ProjectPointCloud2D(point_cloud_, odom_vel_,
                                           critical_time, latency, del_angle_);
   visualization::DrawPointCloud(point_cloud_, 0x44def2, local_viz_msg_);  // light blue
   visualization::DrawPointCloud(proj_point_cloud_, 0x68ad7b, local_viz_msg_);  // green 
+  visualization::DrawCross(Vector2f(5, 0), 0.2, 0x68ad7b, local_viz_msg_);
   if (ProjectedPointCloudCollision(proj_point_cloud_, car_width_, car_length_,
                                    rear_axle_offset_, car_safety_margin_)) {
     drive_msg_.velocity = 0.0;
@@ -288,24 +300,11 @@ void Navigation::Run() {
     }
   } else {
     drive_msg_.velocity = 1.0;
-    drive_msg_.curvature = 0.5;
+    drive_msg_.curvature = 0.0;
     ROS_INFO("Status: Driving");    
   }
 
-  // ---------GROUP PLAN / COORDINATION-------------------------------
-  // I) 1-D TOC (Drive up to and stop at an obstacle) Breakdown
-  //    1) Given Robot position/speed/(curvature = 0), predict position at next time step
-  //    2) Given point cloud, predict point cloud at next time step (assume curvature = 0)
-  //    3) Given a predicted robot's position and predicted point cloud, determine predicted distance (assume curvature = 0)
-  //    4) Given robot speed/acceleration/max speed, etc, determine the critical distance to stop (assume curvature = 0)
-  //    5) Given predicted distance to obstacle and critical distance to stop, decide to cruise, speed up, or stop (assume curvature = 0)
-  // Goal: Drive up to and stop a wall by Friday (10 Sep)
-  // II) 2-D TOC (along a given arc/curvature) Breakdown - same as above
-  // III) Iterate over all possible arcs/curvatures and score each arc based on: ...
-  // IV) Select the arc/curve/path with the best score
-
-  // Let's not forget the questions / write up!
-  // ---------------------------------------------------------
+  drive_msg_.curvature = path_planner_->FindBestPath(proj_point_cloud_, local_viz_msg_);
 
   // Add timestamps to all messages.
   local_viz_msg_.header.stamp = ros::Time::now();
