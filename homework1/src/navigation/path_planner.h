@@ -15,6 +15,7 @@ namespace path_planner {
     struct candidate_path {
         float_t curvature;
         Eigen::Vector2f furthest_point;
+        float_t free_path_length;
     };
 
     class PathPlanner {

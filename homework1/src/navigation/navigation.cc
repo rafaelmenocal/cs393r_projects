@@ -56,7 +56,7 @@ AckermannCurvatureDriveMsg drive_msg_; // velocity, curvature
 // Epsilon value for handling limited numerical precision.
 const float kEpsilon = 1e-5;
 float critical_time = 0.1;
-float latency = 0.2;
+float latency = -0.5;
 float speed = 0.0;
 float accel = 0.0;
 float del_angle_ = 0.0;
@@ -112,7 +112,6 @@ std::vector<Vector2f> ProjectPointCloud2D(const std::vector<Vector2f>& point_clo
                                           const Vector2f& velocity, float critical_time,
                                           float latency, float angle){
   vector<Vector2f> proj_point_cloud_;
-  //angle = angle * M_PI / 180.0;
   ROS_INFO("del_angle_rad_ = %f", angle);
   Eigen::Rotation2Df rot(-angle);
   for (const auto& point : point_cloud_){
@@ -184,10 +183,10 @@ Navigation::Navigation(const string& map_file, ros::NodeHandle* n) :
   path_planner_.reset(
     new path_planner::PathPlanner(
       Vector2f(10, 0),
-      car_width_ + car_safety_margin_,
-      car_length_ + car_safety_margin_,
-      2 * (car_length_ + car_safety_margin_) / 3,
-      10));
+      car_width_ + (2 * car_safety_margin_),
+      car_length_ + (2 * car_safety_margin_),
+      2 * (car_length_ + (2 * car_safety_margin_)) / 3,
+      9));
 
 }
 
@@ -270,8 +269,6 @@ void Navigation::Run() {
   // drawn_point_cloud_ = ProjectPointCloud2D(point_cloud_, odom_vel_, 1/update_frequency_, latency, del_angle_);
   // visualization::DrawPointCloud(drawn_point_cloud_, 0x68ad7b); // green 
   // visualization::DrawPointCloud(point_cloud_, 0x44def2); //light blue
-  visualization::DrawRobot(car_width_, car_length_, rear_axle_offset_,
-                           car_safety_margin_, drive_msg_, local_viz_msg_);
   visualization::DrawTarget(nav_goal_loc_, local_viz_msg_);
 
   ROS_INFO("speed = %f", speed);
@@ -299,13 +296,15 @@ void Navigation::Run() {
       ROS_INFO("Status: Stopping");
     }
   } else {
-    drive_msg_.velocity = 1.0;
+    drive_msg_.velocity = 0.5;
     drive_msg_.curvature = 0.0;
     ROS_INFO("Status: Driving");    
   }
 
   drive_msg_.curvature = path_planner_->FindBestPath(proj_point_cloud_, local_viz_msg_);
 
+  visualization::DrawRobot(car_width_, car_length_, rear_axle_offset_,
+                           car_safety_margin_, drive_msg_, local_viz_msg_);
   // Add timestamps to all messages.
   local_viz_msg_.header.stamp = ros::Time::now();
   global_viz_msg_.header.stamp = ros::Time::now();

@@ -21,8 +21,8 @@ namespace path_planner {
             vehicle_wheelbase_(vehicle_wheelbase),
             num_c_paths_(num_c_paths)
     {
-        for (int i = 0; i < num_c_paths_; i++) {
-            curvatures_.push_back(-1 + ( 2 *float(i) / num_c_paths));
+        for (int i = 1; i < num_c_paths_; i++) {
+            curvatures_.push_back((float(i) / num_c_paths));
         }
     };
 
@@ -48,13 +48,14 @@ namespace path_planner {
                 point_cloud, 1 / curvature, vehicle_width_,
                 vehicle_length_, 2 * vehicle_length_ / 3);
 
+            visualization::DrawPointCloud(points, 0x000000, msg);
             // Get the furthest distance the car could travel along this path without hitting
             // an obstacle.
             const auto furthest_point = obstacle_avoidance::FindShortestDistance(
                 points, 1 / curvature, vehicle_width_,
-                vehicle_length_, 2 * vehicle_length_ / 3);
+                vehicle_length_, 2 * vehicle_length_ / 3, msg);
 
-            candidate_paths_.push_back(candidate_path{curvature, furthest_point});
+            candidate_paths_.push_back(candidate_path{curvature, furthest_point.furthest_point, furthest_point.free_path_length});
         }
     }
 
@@ -63,7 +64,10 @@ namespace path_planner {
         float_t best_curvature = 0.0;
 
         for (const auto& path : candidate_paths_) {
-            float_t score = sqrt(pow(10 - path.furthest_point[0], 2) + pow(path.furthest_point[1], 2));
+            auto dist = - 1 / sqrt(pow(5 - path.furthest_point[0], 2) + pow(path.furthest_point[1], 2));
+
+            float_t score =  path.free_path_length;
+                std::cout << dist << " " << path.free_path_length << " " << path.curvature << std::endl;
             if (score > best_score) {
                 best_score = score;
                 best_curvature = path.curvature;
