@@ -110,11 +110,11 @@ std::vector<Vector2f> ProjectPointCloud2D(const std::vector<Vector2f>& point_clo
                                           const Vector2f& velocity, float critical_time,
                                           float latency, float angle){
   vector<Vector2f> proj_point_cloud_;
-  angle = angle * M_PI / 180.0;
+  //angle = angle * M_PI / 180.0;
   ROS_INFO("del_angle_rad_ = %f", angle);
-  Eigen::Rotation2Df rot(angle);
+  Eigen::Rotation2Df rot(-angle);
   for (const auto& point : point_cloud_){
-    Vector2f proj_point = (rot * point) - (critical_time + latency) * velocity;
+    Vector2f proj_point = (rot * (point - (critical_time + latency) * velocity));
     proj_point_cloud_.push_back(proj_point);
   }
   return proj_point_cloud_;
@@ -275,6 +275,8 @@ void Navigation::Run() {
 
   proj_point_cloud_ = ProjectPointCloud2D(point_cloud_, odom_vel_,
                                           critical_time, latency, del_angle_);
+  visualization::DrawPointCloud(point_cloud_, 0x44def2, local_viz_msg_);  // light blue
+  visualization::DrawPointCloud(proj_point_cloud_, 0x68ad7b, local_viz_msg_);  // green 
   if (ProjectedPointCloudCollision(proj_point_cloud_, car_width_, car_length_,
                                    rear_axle_offset_, car_safety_margin_)) {
     drive_msg_.velocity = 0.0;
@@ -285,8 +287,8 @@ void Navigation::Run() {
       ROS_INFO("Status: Stopping");
     }
   } else {
-    drive_msg_.velocity = max_vel_;
-    drive_msg_.curvature = -0.5;
+    drive_msg_.velocity = 1.0;
+    drive_msg_.curvature = 0.5;
     ROS_INFO("Status: Driving");    
   }
 
