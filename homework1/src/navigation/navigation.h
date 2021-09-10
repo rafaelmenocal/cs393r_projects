@@ -58,7 +58,8 @@ class Navigation {
   float car_width_ = 0.281;
   float car_length_ = 0.535;
   float car_height_ = 0.15;
-  float car_safety_margin_ = 0.5;
+  float car_safety_margin_front_ = 0.33;
+  float car_safety_margin_side_ = 0.08;
   // -- Location of the robot's rear wheel axle relative to the center of the body.
   float rear_axle_offset_ = -0.162;
   Eigen::Vector2f laser_loc_ = Eigen::Vector2f(0.2, 0.15);
@@ -66,7 +67,7 @@ class Navigation {
   float update_frequency_ = 20.0;
 
    // Constructor
-  explicit Navigation(const std::string& map_file, ros::NodeHandle* n);
+  explicit Navigation(const std::string& map_file, const double& latency, ros::NodeHandle* n);
 
   // Used in callback from localization to update position.
   void UpdateLocation(const Eigen::Vector2f& loc, float angle);
@@ -117,6 +118,8 @@ class Navigation {
   Eigen::Vector2f nav_goal_loc_;
   // Navigation goal angle.
   float nav_goal_angle_;
+
+  double latency;
 
 };
 

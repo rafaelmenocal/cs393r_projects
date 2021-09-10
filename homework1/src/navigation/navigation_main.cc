@@ -70,6 +70,7 @@ DEFINE_string(init_topic,
               "initialpose",
               "Name of ROS topic for initialization");
 DEFINE_string(map, "maps/GDC1.txt", "Name of vector map file");
+DEFINE_double(latency, 0.0, "Built-in latency in control");
 
 bool run_ = true;
 sensor_msgs::LaserScan last_laser_msg_;
@@ -145,7 +146,7 @@ int main(int argc, char** argv) {
   // Initialize ROS.
   ros::init(argc, argv, "navigation", ros::init_options::NoSigintHandler);
   ros::NodeHandle n;
-  navigation_.reset(new Navigation(FLAGS_map, &n));
+  navigation_.reset(new Navigation(FLAGS_map, FLAGS_latency, &n));
 
   ros::Subscriber velocity_sub =
       n.subscribe(FLAGS_odom_topic, 1, &OdometryCallback);
