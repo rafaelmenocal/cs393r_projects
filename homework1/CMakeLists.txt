@@ -59,3 +59,4 @@ ADD_EXECUTABLE(eigen_tutorial
 
 ADD_EXECUTABLE(simple_queue_test
                src/navigation/simple_queue_test.cc)
+
