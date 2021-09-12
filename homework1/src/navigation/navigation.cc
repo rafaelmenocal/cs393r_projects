@@ -61,10 +61,10 @@ float del_angle_ = 0.0;
 std::vector<Vector2f> proj_point_cloud_;
 std::vector<Vector2f> drawn_point_cloud_;
 Eigen::Vector2f nav_target = Vector2f(5.0,0.0);
-int num_paths = 50;
+int num_paths = 71;
 // weight the max distance twice as much as not wanting to turn
 float score_max_distance_weight = 2.0; 
-float score_min_turn_weight = 0.0;
+float score_min_turn_weight = 0.1;
 } //namespace
 
 namespace navigation {
@@ -108,7 +108,7 @@ std::vector<Vector2f> ProjectPointCloud2D(const std::vector<Vector2f>& point_clo
 bool PointWithinSafetyMargin(const Vector2f& proj_point,
                              float width, float length,
                              float axle_offset, float safety_margin_front, float safety_margin_side) {
-  bool within_length = (proj_point.x() < (-axle_offset + (length/2.0) + safety_margin_front)) && (proj_point.x() > (-axle_offset - (length/2.0) - safety_margin_front));
+  bool within_length = (proj_point.x() < (axle_offset + length + safety_margin_front)) && (proj_point.x() > (axle_offset - safety_margin_front));
   bool within_width = (proj_point.y() < (safety_margin_side + width/2.0)) && (proj_point.y() > (-safety_margin_side - width/2.0));
   return within_length && within_width;
 }
@@ -165,54 +165,113 @@ float FindCurvePathLength(const Vector2f& point, float curvature,
 
   float_t turning_radius = 1 / curvature;
 
-
   float_t inner_radius = abs(turning_radius) - (car_width_ / 2) - car_safety_margin_side_;
 
-  
   float_t middle_radius = sqrt(
       pow(abs(turning_radius) - (car_width_ / 2) - car_safety_margin_side_, 2.0) + 
-      pow(-rear_axle_offset_ + (car_length_ / 2.0) + car_safety_margin_front_, 2.0));
+      pow(rear_axle_offset_ + car_length_ + car_safety_margin_front_, 2.0));
 
   float_t outter_radius = sqrt(
-      pow(abs(turning_radius) + (car_width_ / 2) + car_safety_margin_side_, 2.0) +
-      pow(-rear_axle_offset_ + (car_length_ / 2.0) + car_safety_margin_front_, 2.0));
+      pow(abs(turning_radius) + (car_width_ / 2.0) + car_safety_margin_side_, 2.0) +
+      pow(rear_axle_offset_ + car_length_ + car_safety_margin_front_, 2.0));
+
 
   float_t shortest_distance = 10.0;
   Eigen::Vector2f furthest_point;
 
   float_t distance = GetDistance(0, turning_radius, point[0], point[1]);
 
+  float_t dist;
   // collision along inside part of the car
   if (inner_radius <= distance && distance < middle_radius) {
-      float_t x = sqrt(pow(distance, 2) - pow(abs(turning_radius) - (0.5 * car_width_ - car_safety_margin_side_), 2));
+      float_t x = sqrt(
+        pow(distance, 2) -
+        pow(abs(turning_radius) - (0.5 * car_width_ - car_safety_margin_side_), 2));
+  
       // Return the arclength between the collision point on the car and the obstacle.
-      auto dist = GetDistance(x, abs(turning_radius) - (0.5 * car_width_ - car_safety_margin_side_), point[0], point[1]) / (2 * abs(distance));
+      if (turning_radius < 0) {
+        dist = GetDistance(
+          x,
+          -((0.5 * car_width_) + car_safety_margin_side_),
+          point[0],
+          point[1]) / (2 * abs(distance));
+      }
+      else {
+        dist = GetDistance(
+          x,
+          (0.5 * car_width_ - car_safety_margin_side_),
+          point[0],
+          point[1]) / (2 * abs(distance));
+      }
       float_t arc_length = abs(2 * abs(distance) * asin(dist));
 
-      if (dist > 1.0) {
-          dist = 0.99;
-      }
       if (arc_length <= shortest_distance) {
           shortest_distance = arc_length;
           furthest_point = point;
       }
   // collision along front of the car
   } else if (middle_radius <= distance && distance < outter_radius) {
-      float_t y = turning_radius - sqrt(
-          pow(distance, 2.0) -
-          pow(-rear_axle_offset_ + (car_length_ / 2) + car_safety_margin_front_, 2.0)
-      );
-      // Return the arclength between the collision point on the car and the obstacle.
+      float_t y;
+      if (turning_radius < 0) {
+        y = sqrt(pow(distance, 2.0) -
+              pow(rear_axle_offset_ + car_length_ + car_safety_margin_front_, 2.0)
+          ) - abs(turning_radius);
+      } else {
+        y = turning_radius - sqrt(pow(distance, 2.0) -
+              pow(rear_axle_offset_ + car_length_ + car_safety_margin_front_, 2.0)
+          );
+      }
+      dist = GetDistance(
+        rear_axle_offset_ + car_length_ + car_safety_margin_front_,
+        y,
+        point[0],
+        point[1]);
 
-      auto dist = GetDistance(-rear_axle_offset_ + (car_length_ / 2) + car_safety_margin_front_, y, point[0], point[1]) / (2 * distance);
-      //if (dist > 1.0) {
-      //    dist = 0.99;
-      //}
-      float_t arc_length = abs(2 * distance * asin(dist));
+      float_t arc_length = abs(2 * distance * asin(dist / (2 * distance)));
+      float_t angle = acos(1 - pow(dist, 2.0) / (2 * (pow(distance, 2.0))));
+
+      if (curvature < -1) {
+        if (curvature < 0 && (rear_axle_offset_ + car_length_ + car_safety_margin_front_ > point[0])) {
+          angle = 3.1415 - abs(angle);
+        }
+      }
+      else if (curvature > 1) {
+        if (curvature > 0 && (rear_axle_offset_ + car_length_ + car_safety_margin_front_ > point[0])) {
+          angle = 3.1415 - abs(angle);
+        }
+        /*
+        visualization::DrawPoint(point, 0xff0000, local_viz_msg_);
+        visualization::DrawPoint(
+          Vector2f(rear_axle_offset_ + car_length_ + car_safety_margin_front_, y),
+          0x000000,
+          local_viz_msg_);
+        visualization::DrawArc(
+          Vector2f(0, 1 / curvature), inner_radius,
+          -6, 1, 0x000000, local_viz_msg_);
+        visualization::DrawArc(
+          Vector2f(0, 1 / curvature), outter_radius,
+          -6, 1, 0x000000, local_viz_msg_);
+        visualization::DrawArc(
+          Vector2f(0, 1 / curvature), middle_radius,
+          -6, 1, 0x000000, local_viz_msg_);
+        visualization::DrawArc(
+          Vector2f(0, 1 / curvature), 1 / curvature,
+          -6, 1, 0x000000, local_viz_msg_);
+          */
+        
+      }
+        
+       
+      arc_length = distance * angle;
       if (arc_length <= shortest_distance) {
           shortest_distance = arc_length;
           furthest_point = point;
       }
+      //if (curvature >1) {
+      //  ROS_INFO(
+      //    "CURV: %f. DISTANCE: %f. DIST: %f. ARC LEN: %f. A: %f. POINT_X: %f. COL: %f",
+      //    curvature, distance, dist, arc_length, angle, point[0], rear_axle_offset_ + (car_length_ / 2) + car_safety_margin_front_);
+      //}
   }
   return shortest_distance;
 }
@@ -236,7 +295,7 @@ float FindMinPathLength(const std::vector<Vector2f>& cloud, float curvature,
       min_path_length = path_length;
     }
   }
-  ROS_INFO("CALLED CURVATURE %f: MIN_PATH: %f", curvature, min_path_length);
+  //ROS_INFO("CALLED CURVATURE %f: MIN_PATH: %f", curvature, min_path_length);
   return min_path_length;
 }
 
@@ -262,6 +321,8 @@ float FindBestCurvaturePath(const std::vector<Vector2f>& cloud, const float min_
     if (c == 0) {
       continue;
     }
+
+    visualization::DrawPathOption(c, 10, 0, local_viz_msg_);
     // returns worse case path length 
     distance = FindMinPathLength(cloud, c, car_width_, car_length_, rear_axle_offset_,
                                  car_safety_margin_front_, car_safety_margin_side_);
@@ -271,7 +332,7 @@ float FindBestCurvaturePath(const std::vector<Vector2f>& cloud, const float min_
     // score comprised of weighted sum of path distance and curvature magnitude (favors going straight)
     // we should probably normalize "distance" (0 - 10) and "turn_magnitude" (0 - 1.02)
     // for right now, I just multipled that later by 10.0 to account for that
-    score = score_max_distance_weight * distance + score_min_turn_weight * 10.0 * turn_magnitude;
+    score = score_max_distance_weight * pow(distance, 3.0) + score_min_turn_weight * turn_magnitude;
     
     if (score > best_score) {
       // if the best_score_distance is less than 3.0 meters? robot should probably turn around
@@ -282,6 +343,28 @@ float FindBestCurvaturePath(const std::vector<Vector2f>& cloud, const float min_
       best_curvature = floor(c*10000 + 0.5) / 10000; //round to nearest ten-thousandth
     }
   }
+  visualization::DrawPathOption(best_curvature, 10, 0, local_viz_msg_);
+  float_t turning_radius = 1 / best_curvature;
+  float_t inner_radius = abs(turning_radius) - (car_width_ / 2) - car_safety_margin_side_;
+  float_t middle_radius = sqrt(
+      pow(abs(turning_radius) - (car_width_ / 2) - car_safety_margin_side_, 2.0) + 
+      pow(rear_axle_offset_ + car_length_ + car_safety_margin_front_, 2.0));
+  float_t outter_radius = sqrt(
+      pow(abs(turning_radius) + (car_width_ / 2.0) + car_safety_margin_side_, 2.0) +
+      pow(rear_axle_offset_ + car_length_ + car_safety_margin_front_, 2.0));
+  visualization::DrawArc(
+    Vector2f(0, 1 / best_curvature), inner_radius,
+    -6, 1, 0x000000, local_viz_msg_);
+  visualization::DrawArc(
+    Vector2f(0, 1 / best_curvature), outter_radius,
+    -6, 1, 0x000000, local_viz_msg_);
+  visualization::DrawArc(
+    Vector2f(0, 1 / best_curvature), middle_radius,
+    -6, 1, 0x000000, local_viz_msg_);
+  visualization::DrawArc(
+    Vector2f(0, 1 / best_curvature), 1 / best_curvature,
+    -6, 1, 0x000000, local_viz_msg_);
+
   ROS_INFO("best_score_distance = %f", best_score_distance);
   ROS_INFO("best_score_turn_magnitude = %f", best_score_turn_magnitude);
   ROS_INFO("best_score = %f", best_score);
@@ -391,7 +474,7 @@ void Navigation::Run() {
 
   // drawn_point_cloud_ = ProjectPointCloud2D(point_cloud_, odom_vel_, 1/update_frequency_, latency, del_angle_);
   // visualization::DrawPointCloud(drawn_point_cloud_, 0x68ad7b); // green 
-  // visualization::DrawPointCloud(point_cloud_, 0x44def2); //light blue
+  //visualization::DrawPointCloud(point_cloud_, 0x44def2, local_viz_msg_); //light blue
   visualization::DrawRobot(car_width_, car_length_, rear_axle_offset_,
                            car_safety_margin_front_, car_safety_margin_side_, drive_msg_, local_viz_msg_);
   visualization::DrawTarget(nav_target, local_viz_msg_);
@@ -406,7 +489,6 @@ void Navigation::Run() {
   ROS_INFO("del_angle_ = %f", del_angle_);
   ROS_INFO("odom_start_angle_ = %f", odom_start_angle_);
   ROS_INFO("----------------------");
-
   // since the target moves with the robot, this is also the scoring algorithm
   drive_msg_.curvature = FindBestCurvaturePath(point_cloud_, min_turn_radius_, num_paths,
                                                car_width_, car_length_, rear_axle_offset_,
@@ -416,14 +498,9 @@ void Navigation::Run() {
   ROS_INFO("drive_msg_.curvature = %f", drive_msg_.curvature);
   proj_point_cloud_ = ProjectPointCloud2D(point_cloud_, odom_vel_,
                                           critical_time, latency, del_angle_);
-<<<<<<< HEAD
-  visualization::DrawPointCloud(point_cloud_, 0x44def2, local_viz_msg_);  // light blue
-  visualization::DrawPointCloud(proj_point_cloud_, 0x68ad7b, local_viz_msg_);  // green 
-=======
   // might need to update ProjectPointCloud2D to use curvature instead of del_angle_
   // proj_point_cloud_ = ProjectPointCloud2D(point_cloud_, odom_vel_,
   //                                         critical_time, latency, del_angle_);
->>>>>>> 8ff847c32d86c48ed4a0e87abd819124914895b5
   if (ProjectedPointCloudCollision(proj_point_cloud_, car_width_, car_length_,
                                    rear_axle_offset_, car_safety_margin_front_, car_safety_margin_side_)) {
     drive_msg_.velocity = 0.0;
@@ -435,11 +512,6 @@ void Navigation::Run() {
       ROS_INFO("Status: Stopping");
     }
   } else {
-<<<<<<< HEAD
-    drive_msg_.velocity = 1.0;
-    drive_msg_.curvature = 0.5;
-    ROS_INFO("Status: Driving");    
-=======
     drive_msg_.velocity = max_vel_;
     ROS_INFO("drive_msg_.velocity = %f", drive_msg_.velocity);
     if (drive_msg_.curvature == 0) { 
@@ -450,8 +522,8 @@ void Navigation::Run() {
     else if (drive_msg_.curvature < 0){
       ROS_INFO("Status: Turning Right");
     }
->>>>>>> 8ff847c32d86c48ed4a0e87abd819124914895b5
   }
+  
 
   ROS_INFO("=================END CONTROL==================");    
 

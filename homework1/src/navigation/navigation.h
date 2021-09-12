@@ -59,7 +59,7 @@ class Navigation {
   float car_length_ = 0.535;
   float car_height_ = 0.15;
   float car_safety_margin_front_ = 0.33;
-  float car_safety_margin_side_ = 0.08;
+  float car_safety_margin_side_ = 0.1;
   // -- Location of the robot's rear wheel axle relative to the center of the body.
   float rear_axle_offset_ = -0.162;
   Eigen::Vector2f laser_loc_ = Eigen::Vector2f(0.2, 0.15);

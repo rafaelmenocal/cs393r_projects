@@ -205,38 +205,38 @@ void DrawRobot(
   visualization::DrawPathOption(
     drive_msg.curvature, drive_msg.velocity, drive_msg.curvature, viz_msg);
   // draw robot boundaries - left side, right side, front, back
-  visualization::DrawLine(Vector2f(-axle_offset - (length/2.0), width/2.0), 
-                          Vector2f(-axle_offset + (length/2.0), width/2.0),
+  visualization::DrawLine(Vector2f(axle_offset, width/2.0), 
+                          Vector2f(axle_offset + length, width/2.0),
                           0x68ad7b,
                           viz_msg);
-  visualization::DrawLine(Vector2f(-axle_offset - (length/2.0), -width/2.0), 
-                          Vector2f(-axle_offset + (length/2.0), -width/2.0),
+  visualization::DrawLine(Vector2f(axle_offset, -width/2.0), 
+                          Vector2f(axle_offset + length, -width/2.0),
                           0x68ad7b,
                           viz_msg);
-  visualization::DrawLine(Vector2f(-axle_offset - (length/2.0), width/2.0), 
-                          Vector2f(-axle_offset - (length/2.0), -width/2.0),
+  visualization::DrawLine(Vector2f(axle_offset + length, width/2.0), 
+                          Vector2f(axle_offset + length, -width/2.0),
                           0x68ad7b,
                           viz_msg);
-  visualization::DrawLine(Vector2f(-axle_offset + (length/2.0), width/2.0),
-                          Vector2f(-axle_offset + (length/2.0), -width/2.0),
+  visualization::DrawLine(Vector2f(axle_offset, width/2.0),
+                          Vector2f(axle_offset, -width/2.0),
                           0x68ad7b,
                           viz_msg);
   // draw robot wheels
-  // draw robot safety margin
-  visualization::DrawLine(Vector2f(-axle_offset - (length/2.0) - safety_margin_front, safety_margin_side + width/2.0), 
-                          Vector2f(-axle_offset + (length/2.0) + safety_margin_front, safety_margin_side + width/2.0),
+  // draw robot safety margin - left side, right side, front, back
+  visualization::DrawLine(Vector2f(axle_offset - safety_margin_front, safety_margin_side + width/2.0), 
+                          Vector2f(axle_offset + length + safety_margin_front, safety_margin_side + width/2.0),
                           0x68ad7b,
                           viz_msg);
-  visualization::DrawLine(Vector2f(-axle_offset - (length/2.0) - safety_margin_front, -safety_margin_side-width/2.0), 
-                          Vector2f(-axle_offset + (length/2.0) + safety_margin_front, -safety_margin_side-width/2.0),
+  visualization::DrawLine(Vector2f(axle_offset - safety_margin_front, -safety_margin_side - (width / 2.0)), 
+                          Vector2f(axle_offset + length + safety_margin_front, -safety_margin_side - (width / 2.0)),
                           0x68ad7b,
                           viz_msg);
-  visualization::DrawLine(Vector2f(-axle_offset - (length/2.0) - safety_margin_front, safety_margin_side+width/2.0), 
-                          Vector2f(-axle_offset - (length/2.0) - safety_margin_front, -safety_margin_side-width/2.0),
+  visualization::DrawLine(Vector2f(axle_offset + length + safety_margin_front, safety_margin_side + (width / 2.0)), 
+                          Vector2f(axle_offset + length + safety_margin_front, -safety_margin_side - (width / 2.0)),
                           0x68ad7b,
                           viz_msg);
-  visualization::DrawLine(Vector2f(-axle_offset + (length/2.0) + safety_margin_front, safety_margin_side+width/2.0),
-                          Vector2f(-axle_offset + (length/2.0) + safety_margin_front, -safety_margin_side-width/2.0),
+  visualization::DrawLine(Vector2f(axle_offset - safety_margin_front, safety_margin_side + (width / 2.0)),
+                          Vector2f(axle_offset - safety_margin_front, -safety_margin_side - (width /2.0)),
                           0x68ad7b,
                           viz_msg);
   // draw laser rangefinder
