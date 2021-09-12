@@ -26,6 +26,7 @@
 #include <string.h>
 #include <inttypes.h>
 #include <vector>
+#include <memory>
 
 #include "glog/logging.h"
 #include "gflags/gflags.h"
@@ -69,10 +70,11 @@ DEFINE_string(init_topic,
               "initialpose",
               "Name of ROS topic for initialization");
 DEFINE_string(map, "maps/GDC1.txt", "Name of vector map file");
+DEFINE_double(latency, 0.0, "Built-in latency in control");
 
 bool run_ = true;
 sensor_msgs::LaserScan last_laser_msg_;
-Navigation* navigation_ = nullptr;
+std::unique_ptr<Navigation> navigation_;
 
 void LaserCallback(const sensor_msgs::LaserScan& msg) {
   if (FLAGS_v > 0) {
@@ -83,8 +85,7 @@ void LaserCallback(const sensor_msgs::LaserScan& msg) {
   // Location of the laser on the robot. Assumes the laser is forward-facing.
   const Vector2f kLaserLoc(0.2, 0);
 
-  static vector<Vector2f> point_cloud_;
-  point_cloud_.clear();
+  vector<Vector2f> point_cloud_;
   // initial current theta
   float cur_theta = msg.angle_min;
   for (unsigned int p = 0; p < msg.ranges.size(); p++) {
@@ -99,9 +100,6 @@ void LaserCallback(const sensor_msgs::LaserScan& msg) {
     // increment current theta
     cur_theta += msg.angle_increment;
   }
-
-
-
 
   navigation_->ObservePointCloud(point_cloud_, msg.header.stamp.toSec());
   last_laser_msg_ = msg;
@@ -148,7 +146,7 @@ int main(int argc, char** argv) {
   // Initialize ROS.
   ros::init(argc, argv, "navigation", ros::init_options::NoSigintHandler);
   ros::NodeHandle n;
-  navigation_ = new Navigation(FLAGS_map, &n);
+  navigation_.reset(new Navigation(FLAGS_map, FLAGS_latency, &n));
 
   ros::Subscriber velocity_sub =
       n.subscribe(FLAGS_odom_topic, 1, &OdometryCallback);
@@ -165,6 +163,5 @@ int main(int argc, char** argv) {
     navigation_->Run();
     loop.Sleep();
   }
-  delete navigation_;
   return 0;
 }
