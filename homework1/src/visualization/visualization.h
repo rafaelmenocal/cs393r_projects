@@ -77,7 +77,7 @@ void DrawPathOption(const float curvature,
                     amrl_msgs::VisualizationMsg& msg);
 
 // convenient method to draw all aspects of the robot boundarys, wheels, etc
-void DrawRobot(float width, float length, float axle_offset, float safety_margin,
+void DrawRobot(float width, float length, float axle_offset, float safety_margin_front, float safety_margin_side,
   const amrl_msgs::AckermannCurvatureDriveMsg& drive_msg, amrl_msgs::VisualizationMsg& viz_msg);
 
 void DrawTarget(const Eigen::Vector2f& target_loc_, amrl_msgs::VisualizationMsg& msg);
