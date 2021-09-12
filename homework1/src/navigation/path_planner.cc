@@ -71,7 +71,8 @@ namespace path_planner {
             ROS_INFO("X,Y: %f, %f", path.furthest_point[0], path.furthest_point[1]);
             ROS_INFO("Free Path Length: %f", path.free_path_length);
             ROS_INFO("Distance to Goal: %f", dist);
-            float_t score =  100 * path.free_path_length - dist - 5.0 * path.average_distance;
+            //float_t score =  100 * path.free_path_length - dist - 5.0 * path.average_distance;
+            float_t score = path.free_path_length;
             if (score > best_score) {
                 best_score = score;
                 best_curvature = path.curvature;
