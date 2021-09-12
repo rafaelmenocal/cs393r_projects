@@ -61,10 +61,10 @@ float del_angle_ = 0.0;
 std::vector<Vector2f> proj_point_cloud_;
 std::vector<Vector2f> drawn_point_cloud_;
 Eigen::Vector2f nav_target = Vector2f(5.0,0.0);
-int num_paths = 100;
+int num_paths = 50;
 // weight the max distance twice as much as not wanting to turn
 float score_max_distance_weight = 2.0; 
-float score_min_turn_weight = 1.0;
+float score_min_turn_weight = 0.0;
 } //namespace
 
 namespace navigation {
@@ -177,7 +177,7 @@ float FindCurvePathLength(const Vector2f& point, float curvature,
       pow(abs(turning_radius) + (car_width_ / 2) + car_safety_margin_side_, 2.0) +
       pow(-rear_axle_offset_ + (car_length_ / 2.0) + car_safety_margin_front_, 2.0));
 
-  float_t shortest_distance = 5.0;
+  float_t shortest_distance = 10.0;
   Eigen::Vector2f furthest_point;
 
   float_t distance = GetDistance(0, turning_radius, point[0], point[1]);
@@ -186,7 +186,7 @@ float FindCurvePathLength(const Vector2f& point, float curvature,
   if (inner_radius <= distance && distance < middle_radius) {
       float_t x = sqrt(pow(distance, 2) - pow(abs(turning_radius) - (0.5 * car_width_ - car_safety_margin_side_), 2));
       // Return the arclength between the collision point on the car and the obstacle.
-      auto dist = GetDistance(x, (car_width_ / 2) + car_safety_margin_side_, point[0], point[1]) / (2 * abs(distance));
+      auto dist = GetDistance(x, abs(turning_radius) - (0.5 * car_width_ - car_safety_margin_side_), point[0], point[1]) / (2 * abs(distance));
       float_t arc_length = abs(2 * abs(distance) * asin(dist));
 
       if (dist > 1.0) {
@@ -205,9 +205,9 @@ float FindCurvePathLength(const Vector2f& point, float curvature,
       // Return the arclength between the collision point on the car and the obstacle.
 
       auto dist = GetDistance(-rear_axle_offset_ + (car_length_ / 2) + car_safety_margin_front_, y, point[0], point[1]) / (2 * distance);
-      if (dist > 1.0) {
-          dist = 0.99;
-      }
+      //if (dist > 1.0) {
+      //    dist = 0.99;
+      //}
       float_t arc_length = abs(2 * distance * asin(dist));
       if (arc_length <= shortest_distance) {
           shortest_distance = arc_length;
@@ -236,6 +236,7 @@ float FindMinPathLength(const std::vector<Vector2f>& cloud, float curvature,
       min_path_length = path_length;
     }
   }
+  ROS_INFO("CALLED CURVATURE %f: MIN_PATH: %f", curvature, min_path_length);
   return min_path_length;
 }
 
@@ -258,6 +259,9 @@ float FindBestCurvaturePath(const std::vector<Vector2f>& cloud, const float min_
   float score = 0.0;
   
   for (float c = start_path_curvature; c <= end_path_curvature; c+=curvature_inc){
+    if (c == 0) {
+      continue;
+    }
     // returns worse case path length 
     distance = FindMinPathLength(cloud, c, car_width_, car_length_, rear_axle_offset_,
                                  car_safety_margin_front_, car_safety_margin_side_);
