@@ -3,6 +3,8 @@
 #include "amrl_msgs/VisualizationMsg.h"
 
 #include "path_planner.h"
+
+#include "ros/ros.h"
 #include "visualization/visualization.h"
 
 #include "obstacle_avoidance.h"
@@ -65,7 +67,12 @@ namespace path_planner {
 
         for (const auto& path : candidate_paths_) {
             auto dist = sqrt(pow(5 - path.furthest_point[0], 2) + pow(path.furthest_point[1], 2));
-            float_t score =  100 * path.free_path_length - 20.0 * dist - 5.0 * path.average_distance;
+            ROS_INFO("Curvature: %f", path.curvature);
+            ROS_INFO("X,Y: %f, %f", furthest_point[0], furthest_point[1]);
+            ROS_INFO("Free Path Length: %f", path.free_path_length);
+            ROS_INFO("Average Distance: %f", path.average_distance);
+            ROS_INFO("Distance to Goal: %f", dist);
+            float_t score =  100 * path.free_path_length - dist - 5.0 * path.average_distance;
             if (score > best_score) {
                 best_score = score;
                 best_curvature = path.curvature;
