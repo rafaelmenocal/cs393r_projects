@@ -186,7 +186,7 @@ Navigation::Navigation(const string& map_file, ros::NodeHandle* n) :
       car_width_ + (2 * car_safety_margin_),
       car_length_ + (2 * car_safety_margin_),
       2 * (car_length_ + (2 * car_safety_margin_)) / 3,
-      121));
+      61));
 
 }
 
