@@ -62,6 +62,8 @@ std::vector<Vector2f> proj_point_cloud_;
 std::vector<Vector2f> drawn_point_cloud_;
 Eigen::Vector2f nav_target = Vector2f(5.0,0.0);
 int num_paths = 50;
+std::vector<float> curve_path_length(2);
+std::vector<vector<float>> paths(num_paths, curve_path_length);
 // weight the max distance twice as much as not wanting to turn
 float score_max_distance_weight = 2.0; 
 float score_min_turn_weight = 0.0;
@@ -150,7 +152,8 @@ Vector2f GetOdomAcceleration(const Vector2f& last_vel,
 float FindStraightPathLength(const Vector2f& point,
                             const float car_width_, const float car_length_, const float rear_axle_offset_,
                             const float car_safety_margin_front_, const float car_safety_margin_side_) {
-  return 0.0;
+  // this isn't correct...
+  return sqrt(pow(point.x(),2) + pow(point.y(),2)) - car_safety_margin_front_ - (car_length_/2.0) + rear_axle_offset_;
 }
 
 
@@ -228,15 +231,17 @@ float FindMinPathLength(const std::vector<Vector2f>& cloud, float curvature,
       // avoid divide by zero math
       path_length = FindStraightPathLength(point, car_width_, car_length_, rear_axle_offset_,
                                            car_safety_margin_front_, car_safety_margin_side_); 
+      // ROS_INFO("Called FindStraightPathLength with curve = %f, path_length = %f, point = (%f, %f)", curvature, path_length, point.x(), point.y());
     } else {
       path_length = FindCurvePathLength(point, curvature, car_width_, car_length_, rear_axle_offset_,
                                         car_safety_margin_front_, car_safety_margin_side_);
+      // ROS_INFO("Called FindCurvePathLength with curve = %f, path_length = %f, point = (%f, %f)", curvature, path_length, point.x(), point.y());
     }
     if (path_length < min_path_length) {
       min_path_length = path_length;
     }
   }
-  ROS_INFO("CALLED CURVATURE %f: MIN_PATH: %f", curvature, min_path_length);
+  // ROS_INFO("CALLED CURVATURE %f: MIN_PATH: %f", curvature, min_path_length);
   return min_path_length;
 }
 
@@ -259,15 +264,18 @@ float FindBestCurvaturePath(const std::vector<Vector2f>& cloud, const float min_
   float score = 0.0;
   
   for (float c = start_path_curvature; c <= end_path_curvature; c+=curvature_inc){
-    if (c == 0) {
-      continue;
-    }
+    
+    float curve = floor(c*10000 + 0.5) / 10000;
+    
+    // if (c == 0) {
+    //   continue;
+    // }
     // returns worse case path length 
-    distance = FindMinPathLength(cloud, c, car_width_, car_length_, rear_axle_offset_,
+    distance = FindMinPathLength(cloud, curve, car_width_, car_length_, rear_axle_offset_,
                                  car_safety_margin_front_, car_safety_margin_side_);
     
-    turn_magnitude = (end_path_curvature - abs(c)); // greater value means more straight
-    
+    turn_magnitude = (end_path_curvature - abs(curve)); // greater value means more straight
+    ROS_INFO("curve = %f, MinPathLength = %f", curve, distance);
     // score comprised of weighted sum of path distance and curvature magnitude (favors going straight)
     // we should probably normalize "distance" (0 - 10) and "turn_magnitude" (0 - 1.02)
     // for right now, I just multipled that later by 10.0 to account for that
@@ -279,9 +287,10 @@ float FindBestCurvaturePath(const std::vector<Vector2f>& cloud, const float min_
       best_score_turn_magnitude = turn_magnitude;
       best_score = score;
       // curvature corresponding to best score so far
-      best_curvature = floor(c*10000 + 0.5) / 10000; //round to nearest ten-thousandth
+      best_curvature = curve; // floor(c*10000 + 0.5) / 10000; //round to nearest ten-thousandth
     }
   }
+  ROS_INFO("----------------------");
   ROS_INFO("best_score_distance = %f", best_score_distance);
   ROS_INFO("best_score_turn_magnitude = %f", best_score_turn_magnitude);
   ROS_INFO("best_score = %f", best_score);
@@ -290,8 +299,11 @@ float FindBestCurvaturePath(const std::vector<Vector2f>& cloud, const float min_
   return best_curvature;
 }
 
-// -------END HELPER FUNCTIONS--------------
+// void InitPaths(){
+//   for ()
+// }
 
+// -------END HELPER FUNCTIONS--------------
 
 // Navigation Constructor called when Navigation instantiated in navigation_main.cc
 Navigation::Navigation(const string& map_file, const double& latency, ros::NodeHandle* n) :
@@ -313,6 +325,7 @@ Navigation::Navigation(const string& map_file, const double& latency, ros::NodeH
   global_viz_msg_ = visualization::NewVisualizationMessage(
       "map", "navigation_global");
   InitRosHeader("base_link", &drive_msg_.header);
+  // InitPaths();
 }
 
 void Navigation::SetNavGoal(const Vector2f& loc, float angle) {
@@ -406,6 +419,14 @@ void Navigation::Run() {
   ROS_INFO("del_angle_ = %f", del_angle_);
   ROS_INFO("odom_start_angle_ = %f", odom_start_angle_);
   ROS_INFO("----------------------");
+  // ROS_INFO("paths[0].size() = %ld", paths[0].size());
+  // ROS_INFO("----------------------");
+
+  // LoadPaths(point_cloud_, min_turn_radius_, num_paths,
+  //           car_width_, car_length_, rear_axle_offset_,
+  //           car_safety_margin_front_, car_safety_margin_side_,
+  //           score_max_distance_weight, score_min_turn_weight);
+
 
   // since the target moves with the robot, this is also the scoring algorithm
   drive_msg_.curvature = FindBestCurvaturePath(point_cloud_, min_turn_radius_, num_paths,
@@ -430,7 +451,7 @@ void Navigation::Run() {
       ROS_INFO("Status: Stopping");
     }
   } else {
-    drive_msg_.velocity = max_vel_;
+    drive_msg_.velocity = 0.0; // max_vel_;
     ROS_INFO("drive_msg_.velocity = %f", drive_msg_.velocity);
     if (drive_msg_.curvature == 0) { 
       ROS_INFO("Status: Driving Straight");
