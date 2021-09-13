@@ -61,7 +61,7 @@ float del_angle_ = 0.0;
 std::vector<Vector2f> proj_point_cloud_;
 std::vector<Vector2f> drawn_point_cloud_;
 Eigen::Vector2f nav_target = Vector2f(5.0,0.0);
-int num_paths = 71;
+int num_paths = 100;
 // weight the max distance twice as much as not wanting to turn
 float score_max_distance_weight = 2.0; 
 float score_min_turn_weight = 0.1;
@@ -150,7 +150,12 @@ Vector2f GetOdomAcceleration(const Vector2f& last_vel,
 float FindStraightPathLength(const Vector2f& point,
                             const float car_width_, const float car_length_, const float rear_axle_offset_,
                             const float car_safety_margin_front_, const float car_safety_margin_side_) {
-  return 0.0;
+  if (abs(point[1]) <= car_length_/2.0 + car_safety_margin_side_) {
+    return point[0] - (-rear_axle_offset_ + car_length_/2.0 + car_safety_margin_front_);
+  }
+  else{
+    return 10.0;
+  }
 }
 
 
@@ -318,21 +323,24 @@ float FindBestCurvaturePath(const std::vector<Vector2f>& cloud, const float min_
   float score = 0.0;
   
   for (float c = start_path_curvature; c <= end_path_curvature; c+=curvature_inc){
-    if (c == 0) {
-      continue;
-    }
+    float curve = floor(c*10000 + 0.5) / 10000;
+    // if (curve == 0) {
+    //   ROS_INFO("curve = 0 ===================");
+    //   continue;
+    // }
 
-    visualization::DrawPathOption(c, 10, 0, local_viz_msg_);
+    visualization::DrawPathOption(curve, 10, 0, local_viz_msg_);
     // returns worse case path length 
-    distance = FindMinPathLength(cloud, c, car_width_, car_length_, rear_axle_offset_,
+    distance = FindMinPathLength(cloud, curve, car_width_, car_length_, rear_axle_offset_,
                                  car_safety_margin_front_, car_safety_margin_side_);
     
-    turn_magnitude = (end_path_curvature - abs(c)); // greater value means more straight
+    turn_magnitude = (end_path_curvature - abs(curve)); // greater value means more straight
     
     // score comprised of weighted sum of path distance and curvature magnitude (favors going straight)
     // we should probably normalize "distance" (0 - 10) and "turn_magnitude" (0 - 1.02)
     // for right now, I just multipled that later by 10.0 to account for that
-    score = score_max_distance_weight * pow(distance, 3.0) + score_min_turn_weight * turn_magnitude;
+    // score = score_max_distance_weight * pow(distance, 3.0) + score_min_turn_weight * turn_magnitude;
+    score = score_max_distance_weight * distance + score_min_turn_weight * 10.0 * turn_magnitude;
     
     if (score > best_score) {
       // if the best_score_distance is less than 3.0 meters? robot should probably turn around
@@ -340,7 +348,8 @@ float FindBestCurvaturePath(const std::vector<Vector2f>& cloud, const float min_
       best_score_turn_magnitude = turn_magnitude;
       best_score = score;
       // curvature corresponding to best score so far
-      best_curvature = floor(c*10000 + 0.5) / 10000; //round to nearest ten-thousandth
+      best_curvature = curve;
+      // best_curvature = floor(c*10000 + 0.5) / 10000; //round to nearest ten-thousandth
     }
   }
   visualization::DrawPathOption(best_curvature, 10, 0, local_viz_msg_);
