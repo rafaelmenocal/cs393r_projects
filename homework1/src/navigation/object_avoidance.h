@@ -70,6 +70,10 @@ namespace object_avoidance {
             inline float_t GetDistance(float_t x0, float_t y0, float_t x1, float_t y1) {
                 return sqrt(pow(x1 - x0, 2.0) + pow(y1 - y0, 2.0));
             }
+            inline float_t GetDistance(const Eigen::Vector2f& point1, const Eigen::Vector2f& point2){
+                return sqrt(pow(point2.x() - point1.x(), 2) + pow(point2.y() - point1.y(), 2));
+            }
+            float_t FindCurvePathLengthv2(const Eigen::Vector2f& point, float_t curvature);
 
         public:
             // Constructor. Initialize the difference paths here.

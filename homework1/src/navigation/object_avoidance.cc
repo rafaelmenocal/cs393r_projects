@@ -214,20 +214,30 @@ namespace object_avoidance {
             )->curvature;
     }
 
-// // Given a single point, vehicle dimensions, and a curvature, return path length 
-// float FindCurvePathLengthv2(const Vector2f& point, float curvature,
-//                           const float car_width_, const float car_length_, const float rear_axle_offset_,
-//                           const float car_safety_margin_front_, const float car_safety_margin_side_) {
-//   float r = -1/curvature;
-//   float r_min = r - car_width_/2.0 - car_safety_margin_side_;
-//   float r_mid = sqrt(pow(r - car_width_/2.0 - car_safety_margin_side_, 2) + pow(-rear_axle_offset_ + car_length_/2.0 + car_safety_margin_front_, 2));
-//   float r_max = sqrt(pow(r + car_width_/2.0 + car_safety_margin_side_, 2) + pow(-rear_axle_offset_ + car_length_/2.0 + car_safety_margin_front_, 2));
-//   float r_obs = sqrt(pow(point.x(), 2) + pow(point.y() + r, 2)); // is r + or -
+    float_t ObjectAvoidance::FindCurvePathLengthv2(const Eigen::Vector2f& point, float_t curvature) {
+        float r = 1 / abs(curvature);
+        Eigen::Vector2f turn_point = Eigen::Vector2f(0.0, r * int(curvature / abs(curvature)));
 
-//   if ((r_min <= r_obs) && (r_obs < r_mid)){
-    
-//   }
+        // if (point.x() < 0.0) {
+        //     return 10.0; // don't consider points behind car
+        // }
 
-//   return 10.0;
-// };
+        float r_min = r - car_specs_.car_width/2.0 - car_specs_.car_safety_margin_side;
+        float r_mid = sqrt(pow(r_min, 2) + pow(-car_specs_.rear_axle_offset + (car_specs_.car_length / 2.0) + car_specs_.car_safety_margin_front, 2)); 
+        float r_max = sqrt(pow(r + (car_specs_.car_width / 2.0) + car_specs_.car_safety_margin_side, 2) + pow(-car_specs_.rear_axle_offset + (car_specs_.car_length / 2.0) + car_specs_.car_safety_margin_front, 2)); 
+        float r_obs = GetDistance(turn_point, point);
+
+        float Beta;
+        float alpha;
+        if ((r_min <= r_obs) && (r_obs < r_mid)){ // point will hit the left side of car
+            Beta = acos(r - (car_specs_.car_width / 2.0) - car_specs_.car_safety_margin_side / r_obs);
+        } else if ((r_mid <= r_obs) && (r_obs <= r_max)) {  // point will hit front of car
+            Beta = asin((- car_specs_.rear_axle_offset + (car_specs_.car_length / 2.0) + car_specs_.car_safety_margin_front)/ r_obs);
+        } else{ // else point doesn't hit car
+            return 10.0;
+        }
+        float dist = GetDistance(point, Eigen::Vector2f(0.0, 0.0));
+        alpha =  acos((pow(dist, 2) - pow(r, 2) - pow(r_obs, 2))/(2 * r * r_obs)) - Beta;
+        return alpha * r; // alpha in radians to path length
+    }
 };
