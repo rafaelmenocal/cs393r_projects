@@ -15,7 +15,29 @@ namespace object_avoidance {
         float_t car_length;
         float_t car_safety_margin_front;
         float_t car_safety_margin_side;
+        // This is the rear axle's offset from the center of the car
         float_t rear_axle_offset;
+
+        // Calculated params given the robot's dimensions
+        float_t total_front;
+        float_t total_back;
+        float_t total_side;
+
+        CarSpecs(float_t car_width, float_t car_height,
+                 float_t car_length, float_t car_safety_margin_front,
+                 float_t car_safety_margin_side, float_t rear_axle_offset) :
+                 car_width(car_width),
+                 car_height(car_height),
+                 car_length(car_length),
+                 car_safety_margin_front(car_safety_margin_front),
+                 car_safety_margin_side(car_safety_margin_side),
+                 rear_axle_offset(rear_axle_offset)
+            {
+                total_front = -rear_axle_offset + (car_length / 2.0) + car_safety_margin_front;
+                total_back = -rear_axle_offset - (car_length / 2.0) - car_safety_margin_front;
+                total_side = (car_width / 2.0) + car_safety_margin_side;
+            }
+
     };
 
     struct PathOption {
