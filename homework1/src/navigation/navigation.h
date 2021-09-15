@@ -36,6 +36,8 @@ struct PathOption {
   float curvature;
   float clearance;
   float free_path_length;
+  float score;
+  float turn_magnitude;
   Eigen::Vector2f obstruction;
   Eigen::Vector2f closest_point;
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
@@ -43,7 +45,7 @@ struct PathOption {
 
 class Navigation {
  public:
-
+  
   // --------- Added ------------
   Eigen::Vector2f last_odom_loc_ = Eigen::Vector2f(0.0, 0.0);
   float last_odom_angle_ = 0.0;
