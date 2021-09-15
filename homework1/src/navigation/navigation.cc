@@ -169,6 +169,14 @@ float FindCurvePathLength(const Vector2f& point, float curvature,
                           const float car_width_, const float car_length_, const float rear_axle_offset_,
                           const float car_safety_margin_front_, const float car_safety_margin_side_) {
 
+
+  if (curvature > 0 && point[1] < -((car_width_ / 2.0) + car_safety_margin_side_)) {
+    return 10.0;
+  }
+  else if (curvature < 0 && point[1] > ((car_width_ / 2.0) + car_safety_margin_side_)) {
+    return 10.0;
+  }
+
   float_t turning_radius = 1 / curvature;
 
   float_t inner_radius = abs(turning_radius) - (car_width_ / 2) - car_safety_margin_side_;
@@ -235,37 +243,6 @@ float FindCurvePathLength(const Vector2f& point, float curvature,
 
       float_t arc_length = abs(2 * distance * asin(dist / (2 * distance)));
       float_t angle = acos(1 - pow(dist, 2.0) / (2 * (pow(distance, 2.0))));
-
-      if (curvature < -1) {
-        if (curvature < 0 && (rear_axle_offset_ + car_length_ + car_safety_margin_front_ > point[0])) {
-          angle = 3.1415 - abs(angle);
-        }
-      }
-      else if (curvature > 1) {
-        if (curvature > 0 && (rear_axle_offset_ + car_length_ + car_safety_margin_front_ > point[0])) {
-          angle = 3.1415 - abs(angle);
-        }
-        /*
-        visualization::DrawPoint(point, 0xff0000, local_viz_msg_);
-        visualization::DrawPoint(
-          Vector2f(rear_axle_offset_ + car_length_ + car_safety_margin_front_, y),
-          0x000000,
-          local_viz_msg_);
-        visualization::DrawArc(
-          Vector2f(0, 1 / curvature), inner_radius,
-          -6, 1, 0x000000, local_viz_msg_);
-        visualization::DrawArc(
-          Vector2f(0, 1 / curvature), outter_radius,
-          -6, 1, 0x000000, local_viz_msg_);
-        visualization::DrawArc(
-          Vector2f(0, 1 / curvature), middle_radius,
-          -6, 1, 0x000000, local_viz_msg_);
-        visualization::DrawArc(
-          Vector2f(0, 1 / curvature), 1 / curvature,
-          -6, 1, 0x000000, local_viz_msg_);
-          */
-        
-      }
         
        
       arc_length = distance * angle;
@@ -273,11 +250,6 @@ float FindCurvePathLength(const Vector2f& point, float curvature,
           shortest_distance = arc_length;
           furthest_point = point;
       }
-      //if (curvature >1) {
-      //  ROS_INFO(
-      //    "CURV: %f. DISTANCE: %f. DIST: %f. ARC LEN: %f. A: %f. POINT_X: %f. COL: %f",
-      //    curvature, distance, dist, arc_length, angle, point[0], rear_axle_offset_ + (car_length_ / 2) + car_safety_margin_front_);
-      //}
   }
   return shortest_distance;
 }
@@ -433,7 +405,6 @@ void UpdatePaths(std::vector<PathOption>* paths, const std::vector<Vector2f>& cl
                             const float car_width_, const float car_length_, const float rear_axle_offset_,
                             const float car_safety_margin_front_, const float car_safety_margin_side_){
   for (auto& path : *paths){
-    // ROS_INFO("path curve = %f",path.curvature);
     path.free_path_length = FindMinPathLength(cloud, path.curvature, car_width_, car_length_, rear_axle_offset_,
                                  car_safety_margin_front_, car_safety_margin_side_);
     path.turn_magnitude = (paths->at(paths->size() - 1).curvature - abs(path.curvature)); // greater value means more straight
@@ -571,10 +542,8 @@ void Navigation::Run() {
   ROS_INFO("odom_start_angle_ = %f", odom_start_angle_);
   ROS_INFO("----------------------");
   // since the target moves with the robot, this is also the scoring algorithm
-  drive_msg_.curvature = FindBestCurvaturePath(point_cloud_, min_turn_radius_, odd_num_paths,
-                                               car_width_, car_length_, rear_axle_offset_,
-                                               car_safety_margin_front_, car_safety_margin_side_,
-                                               score_max_distance_weight, score_min_turn_weight);
+  drive_msg_.curvature = std::max_element(
+    paths.begin(), paths.end(), [](const PathOption& lhs, const PathOption& rhs){return lhs.score < rhs.score;})->curvature;
   // drive_msg_.curvature = 0.0;
   ROS_INFO("drive_msg_.curvature = %f", drive_msg_.curvature);
   proj_point_cloud_ = ProjectPointCloud2D(point_cloud_, odom_vel_,
@@ -593,7 +562,7 @@ void Navigation::Run() {
       ROS_INFO("Status: Stopping");
     }
   } else {
-    drive_msg_.velocity = 0.0; // max_vel_;
+    drive_msg_.velocity = max_vel_;
     ROS_INFO("drive_msg_.velocity = %f", drive_msg_.velocity);
     if (drive_msg_.curvature == 0) { 
       ROS_INFO("Status: Driving Straight");
