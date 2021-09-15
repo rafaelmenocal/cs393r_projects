@@ -115,7 +115,7 @@ namespace object_avoidance {
     * collision with the point
     */ 
     float_t ObjectAvoidance::FindCurvePathLength(
-        const Eigen::Vector2f& point, float curvature) {
+        const Eigen::Vector2f& point, float_t curvature) {
         
         if (curvature > 0 && point[1] < -((car_specs_.car_width / 2.0) + car_specs_.car_safety_margin_side)) {
             return 10.0;

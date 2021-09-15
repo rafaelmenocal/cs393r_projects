@@ -66,7 +66,7 @@ namespace object_avoidance {
 
             float_t FindMinPathLength(const std::vector<Eigen::Vector2f>& cloud, float_t curvature);
             float_t FindStraightPathLength(const Eigen::Vector2f& point);
-            float_t FindCurvePathLength(const Eigen::Vector2f& point, float curvature);
+            float_t FindCurvePathLength(const Eigen::Vector2f& point, float_t curvature);
             inline float_t GetDistance(float_t x0, float_t y0, float_t x1, float_t y1) {
                 return sqrt(pow(x1 - x0, 2.0) + pow(y1 - y0, 2.0));
             }
