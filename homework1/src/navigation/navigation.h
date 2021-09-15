@@ -18,30 +18,22 @@
 \author  Joydeep Biswas, (C) 2019
 */
 //========================================================================
+#ifndef __SRC_NAVIGATION_NAVIGATION__
+#define __SRC_NAVIGATION_NAVIGATION__
 
+#include <memory>
 #include <vector>
 
 #include "eigen3/Eigen/Dense"
 
-#ifndef NAVIGATION_H
-#define NAVIGATION_H
+#include "object_avoidance.h"
+
 
 namespace ros {
   class NodeHandle;
 }  // namespace ros
 
 namespace navigation {
-
-struct PathOption {
-  float curvature;
-  float clearance;
-  float free_path_length;
-  float score;
-  float turn_magnitude;
-  Eigen::Vector2f obstruction;
-  Eigen::Vector2f closest_point;
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-};
 
 class Navigation {
  public:
@@ -64,6 +56,10 @@ class Navigation {
   float car_safety_margin_side_ = 0.1;
   // -- Location of the robot's rear wheel axle relative to the center of the body.
   float rear_axle_offset_ = -0.162;
+  object_avoidance::CarSpecs car_specs_ = {car_width_, car_height_,
+                         car_length_, car_safety_margin_front_,
+                         car_safety_margin_side_, rear_axle_offset_};
+  
   Eigen::Vector2f laser_loc_ = Eigen::Vector2f(0.2, 0.15);
   // -- Simulation Update Frequency.
   float update_frequency_ = 20.0;
@@ -123,8 +119,10 @@ class Navigation {
 
   double latency;
 
+  std::unique_ptr<object_avoidance::ObjectAvoidance> path_planner_;
+
 };
 
 }  // namespace navigation
 
-#endif  // NAVIGATION_H
+#endif  // __SRC_NAVIGATION_NAVIGATION__
