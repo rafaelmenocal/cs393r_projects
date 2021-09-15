@@ -286,6 +286,9 @@ void Navigation::Run() {
   // since the target moves with the robot, this is also the scoring algorithm
   drive_msg_.curvature = path_planner_->GetHighestScorePath();
 
+  // Check the highest scoring path's length vs critical distance needed to full stop
+  // 
+
   // Draw and print all the paths
   DrawPaths(path_planner_->GetPaths());
   PrintPaths(path_planner_->GetPaths());

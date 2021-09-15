@@ -58,7 +58,7 @@ class Navigation {
   float rear_axle_offset_ = -0.162;
   object_avoidance::CarSpecs car_specs_ = {car_width_, car_height_,
                          car_length_, car_safety_margin_front_,
-                         car_safety_margin_side_, rear_axle_offset_};
+                         car_safety_margin_side_ + (float_t)0.1, rear_axle_offset_};
   
   Eigen::Vector2f laser_loc_ = Eigen::Vector2f(0.2, 0.15);
   // -- Simulation Update Frequency.

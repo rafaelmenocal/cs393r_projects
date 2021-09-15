@@ -216,20 +216,20 @@ namespace object_avoidance {
     }
 
 // // Given a single point, vehicle dimensions, and a curvature, return path length 
-// float FindCurvePathLengthv2(const Vector2f& point, float curvature,
-//                           const float car_width_, const float car_length_, const float rear_axle_offset_,
-//                           const float car_safety_margin_front_, const float car_safety_margin_side_) {
-//   float r = -1/curvature;
-//   float r_min = r - car_width_/2.0 - car_safety_margin_side_;
-//   float r_mid = sqrt(pow(r - car_width_/2.0 - car_safety_margin_side_, 2) + pow(-rear_axle_offset_ + car_length_/2.0 + car_safety_margin_front_, 2));
-//   float r_max = sqrt(pow(r + car_width_/2.0 + car_safety_margin_side_, 2) + pow(-rear_axle_offset_ + car_length_/2.0 + car_safety_margin_front_, 2));
-//   float r_obs = sqrt(pow(point.x(), 2) + pow(point.y() + r, 2)); // is r + or -
+float FindCurvePathLengthv2(const Vector2f& point, float curvature,
+                          const float car_width_, const float car_length_, const float rear_axle_offset_,
+                          const float car_safety_margin_front_, const float car_safety_margin_side_) {
+  float r = -1/curvature;
+  float r_min = r - car_width_/2.0 - car_safety_margin_side_;
+  float r_mid = sqrt(pow(r - car_width_/2.0 - car_safety_margin_side_, 2) + pow(-rear_axle_offset_ + car_length_/2.0 + car_safety_margin_front_, 2));
+  float r_max = sqrt(pow(r + car_width_/2.0 + car_safety_margin_side_, 2) + pow(-rear_axle_offset_ + car_length_/2.0 + car_safety_margin_front_, 2));
+  float r_obs = sqrt(pow(point.x(), 2) + pow(point.y() + r, 2)); // is r + or -
 
-//   if ((r_min <= r_obs) && (r_obs < r_mid)){
+  if ((r_min <= r_obs) && (r_obs < r_mid)){
     
-//   }
+  }
 
-//   return 10.0;
-// }
+  return 10.0;
+}
 
 }
