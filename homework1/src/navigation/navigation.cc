@@ -19,21 +19,24 @@
 */
 //========================================================================
 
-#include "gflags/gflags.h"
+#include "navigation.h"
+
+#include <cstdlib>
+#include <cmath>
+
 #include "eigen3/Eigen/Dense"
 #include "eigen3/Eigen/Geometry"
+#include "gflags/gflags.h"
+#include "glog/logging.h"
+#include "ros/ros.h"
+
 #include "amrl_msgs/AckermannCurvatureDriveMsg.h"
 #include "amrl_msgs/Pose2Df.h"
 #include "amrl_msgs/VisualizationMsg.h"
-#include "glog/logging.h"
-#include "ros/ros.h"
 #include "shared/math/math_util.h"
 #include "shared/util/timer.h"
 #include "shared/ros/ros_helpers.h"
-#include "navigation.h"
 #include "visualization/visualization.h"
-#include <cstdlib>
-#include <cmath>
 
 using Eigen::Vector2f;
 using amrl_msgs::AckermannCurvatureDriveMsg;
@@ -264,7 +267,7 @@ void Navigation::Run() {
 
   // drawn_point_cloud_ = ProjectPointCloud2D(point_cloud_, odom_vel_, 1/update_frequency_, latency, del_angle_);
   // visualization::DrawPointCloud(drawn_point_cloud_, 0x68ad7b); // green 
-  //visualization::DrawPointCloud(point_cloud_, 0x44def2, local_viz_msg_); //light blue
+  visualization::DrawPointCloud(point_cloud_, 0x44def2, local_viz_msg_); //light blue
   visualization::DrawRobot(car_width_, car_length_, rear_axle_offset_,
                            car_safety_margin_front_, car_safety_margin_side_, drive_msg_, local_viz_msg_);
   visualization::DrawTarget(nav_target, local_viz_msg_);
@@ -295,7 +298,6 @@ void Navigation::Run() {
 
   // Draw the path that was choosen by the object avoidance algorithm.
   visualization::DrawPathOption(drive_msg_.curvature, 5.0, 0, local_viz_msg_);
-
   ROS_INFO("drive_msg_.curvature = %f", drive_msg_.curvature);
   proj_point_cloud_ = ProjectPointCloud2D(point_cloud_, odom_vel_,
                                           critical_time, latency, del_angle_);

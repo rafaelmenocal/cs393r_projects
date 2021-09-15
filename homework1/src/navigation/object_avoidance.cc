@@ -8,6 +8,8 @@
 #include <cmath>
 #include <math.h>
 
+#include "ros/ros.h"
+#include "visualization/visualization.h"
 
 namespace object_avoidance {
 
@@ -99,7 +101,8 @@ namespace object_avoidance {
     float_t ObjectAvoidance::FindStraightPathLength(const Eigen::Vector2f& point) {
         // First check if the y position is within the swept volume of the robot
         if (abs(point[1]) <= car_specs_.total_side) {
-            return point[0] - car_specs_.total_front;
+            // TODO(alex): Why would this be negative?
+            return std::max(point[0] - car_specs_.total_front, (float_t)0.0);
         }  else {
             return 10.0;
         }
@@ -109,7 +112,7 @@ namespace object_avoidance {
     * Find the longest traversable distance before collision along a curved path
     * 
     * @param point: the point to check for collision with
-    * @param curvaturee: the curvature of the path
+    * @param curvature: the curvature of the path
     * 
     * @return the longest path until collision with the point. Returns 10.0 if no
     * collision with the point
@@ -117,14 +120,17 @@ namespace object_avoidance {
     float_t ObjectAvoidance::FindCurvePathLength(
         const Eigen::Vector2f& point, float_t curvature) {
         
-        if (curvature > 0 && point[1] < -((car_specs_.car_width / 2.0) + car_specs_.car_safety_margin_side)) {
+        // If we are turning left and the point under consideration is below the bottom
+        // of the car, we won't hit the point until we circle all the way back around.
+        if (curvature > 0 && point[1] < -car_specs_.total_side) {
             return 10.0;
         }
-        else if (curvature < 0 && point[1] > ((car_specs_.car_width / 2.0) + car_specs_.car_safety_margin_side)) {
+        // If we are turning right and the point under consideration is above the top part
+        // of the car, we won't hit the point until we circle all the way back around.
+        else if (curvature < 0 && point[1] > car_specs_.total_side) {
             return 10.0;
         }
-
-        float_t turning_radius = 1 / curvature;
+        float_t turning_radius = 1.0 / curvature;
 
         float_t inner_radius = abs(turning_radius) - (car_specs_.car_width / 2) - car_specs_.car_safety_margin_side;
 
@@ -133,21 +139,23 @@ namespace object_avoidance {
             pow(-car_specs_.rear_axle_offset + (car_specs_.car_length / 2.0) + car_specs_.car_safety_margin_front, 2.0));
 
         float_t outter_radius = sqrt(
-            pow(abs(turning_radius) + (car_specs_.car_width / 2.0) + car_specs_.car_safety_margin_side, 2.0) +
-            pow(-car_specs_.rear_axle_offset + (car_specs_.car_length / 2.0) + car_specs_.car_safety_margin_front, 2.0));
+            pow(abs(turning_radius) + car_specs_.total_side, 2.0) +
+            pow(car_specs_.total_front, 2.0));
 
 
         float_t shortest_distance = 10.0;
         Eigen::Vector2f furthest_point;
 
-        float_t distance = GetDistance(0, turning_radius, point[0], point[1]);
+        // Find the distance from the center of turning circle to point
+        float_t dist_to_point = GetDistance(0, turning_radius, point[0], point[1]);
 
         float_t dist;
         // collision along inside part of the car
-        if (inner_radius <= distance && distance < middle_radius) {
+        if (inner_radius <= dist_to_point && dist_to_point < middle_radius) {
+            // Find the x-coordinate of the point of collision along the car. We know the
+            // y-position of this point. This works for positive and negative curvature.
             float_t x = sqrt(
-                pow(distance, 2) -
-                pow(abs(turning_radius) - (0.5 * car_specs_.car_width - car_specs_.car_safety_margin_side), 2));
+                pow(dist_to_point, 2) - pow(abs(turning_radius) - car_specs_.total_side, 2));
         
             // Return the arclength between the collision point on the car and the obstacle.
             if (turning_radius < 0) {
@@ -155,44 +163,35 @@ namespace object_avoidance {
                 x,
                 -((0.5 * car_specs_.car_width) + car_specs_.car_safety_margin_side),
                 point[0],
-                point[1]) / (2 * abs(distance));
+                point[1]) / (2 * abs(dist_to_point));
             }
             else {
                 dist = GetDistance(
                 x,
                 (0.5 * car_specs_.car_width - car_specs_.car_safety_margin_side),
                 point[0],
-                point[1]) / (2 * abs(distance));
+                point[1]) / (2 * abs(dist_to_point));
             }
-            float_t arc_length = abs(2 * abs(distance) * asin(dist));
+            float_t arc_length = abs(2 * abs(dist_to_point) * asin(dist));
 
             if (arc_length <= shortest_distance) {
                 shortest_distance = arc_length;
                 furthest_point = point;
             }
         // collision along front of the car
-        } else if (middle_radius <= distance && distance < outter_radius) {
+        } else if (middle_radius <= dist_to_point && dist_to_point < outter_radius) {
             float_t y;
             if (turning_radius < 0) {
-                y = sqrt(pow(distance, 2.0) -
-                    pow(-car_specs_.rear_axle_offset + (car_specs_.car_length / 2.0) + car_specs_.car_safety_margin_front, 2.0)
-                ) - abs(turning_radius);
+                y = sqrt(pow(dist_to_point, 2.0) - pow(car_specs_.total_front, 2.0)) - abs(turning_radius);
             } else {
-                y = turning_radius - sqrt(pow(distance, 2.0) -
-                    pow(-car_specs_.rear_axle_offset + (car_specs_.car_length / 2.0) + car_specs_.car_safety_margin_front, 2.0)
-                );
+                y = turning_radius - sqrt(pow(dist_to_point, 2.0) - pow(car_specs_.total_front, 2.0));
             }
-            dist = GetDistance(
-                -car_specs_.rear_axle_offset + (car_specs_.car_length / 2.0) + car_specs_.car_safety_margin_front,
-                y,
-                point[0],
-                point[1]);
+            // Calculate the distance from the point of collision along the car to the
+            // current position of the car.
+            float_t dist_from_collision_to_point = GetDistance(car_specs_.total_front, y, point[0], point[1]);
+            float_t angle = acos(1 - pow(dist_from_collision_to_point, 2.0) / (2 * (pow(dist_to_point, 2.0))));
+            float_t arc_length = dist_to_point * angle;
 
-            float_t arc_length = abs(2 * distance * asin(dist / (2 * distance)));
-            float_t angle = acos(1 - pow(dist, 2.0) / (2 * (pow(distance, 2.0))));
-                
-            
-            arc_length = distance * angle;
             if (arc_length <= shortest_distance) {
                 shortest_distance = arc_length;
                 furthest_point = point;
@@ -216,20 +215,19 @@ namespace object_avoidance {
     }
 
 // // Given a single point, vehicle dimensions, and a curvature, return path length 
-float FindCurvePathLengthv2(const Vector2f& point, float curvature,
-                          const float car_width_, const float car_length_, const float rear_axle_offset_,
-                          const float car_safety_margin_front_, const float car_safety_margin_side_) {
-  float r = -1/curvature;
-  float r_min = r - car_width_/2.0 - car_safety_margin_side_;
-  float r_mid = sqrt(pow(r - car_width_/2.0 - car_safety_margin_side_, 2) + pow(-rear_axle_offset_ + car_length_/2.0 + car_safety_margin_front_, 2));
-  float r_max = sqrt(pow(r + car_width_/2.0 + car_safety_margin_side_, 2) + pow(-rear_axle_offset_ + car_length_/2.0 + car_safety_margin_front_, 2));
-  float r_obs = sqrt(pow(point.x(), 2) + pow(point.y() + r, 2)); // is r + or -
+// float FindCurvePathLengthv2(const Vector2f& point, float curvature,
+//                           const float car_width_, const float car_length_, const float rear_axle_offset_,
+//                           const float car_safety_margin_front_, const float car_safety_margin_side_) {
+//   float r = -1/curvature;
+//   float r_min = r - car_width_/2.0 - car_safety_margin_side_;
+//   float r_mid = sqrt(pow(r - car_width_/2.0 - car_safety_margin_side_, 2) + pow(-rear_axle_offset_ + car_length_/2.0 + car_safety_margin_front_, 2));
+//   float r_max = sqrt(pow(r + car_width_/2.0 + car_safety_margin_side_, 2) + pow(-rear_axle_offset_ + car_length_/2.0 + car_safety_margin_front_, 2));
+//   float r_obs = sqrt(pow(point.x(), 2) + pow(point.y() + r, 2)); // is r + or -
 
-  if ((r_min <= r_obs) && (r_obs < r_mid)){
+//   if ((r_min <= r_obs) && (r_obs < r_mid)){
     
-  }
+//   }
 
-  return 10.0;
-}
-
-}
+//   return 10.0;
+// };
+};
