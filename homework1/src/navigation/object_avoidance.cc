@@ -9,6 +9,8 @@
 #include <math.h>
 #include "glog/logging.h"
 #include "ros/ros.h"
+#include "../1D-TOC/1DTOC.h"
+#include "../navigation/navigation.h"
 
 
 
@@ -268,4 +270,29 @@ namespace object_avoidance {
         return abs(alpha * r); //std::min(float(abs(alpha * r)), float((r * M_PI/2))); // alpha in radians to path length
     }
 
+    //  Choose an optimal velocity based on the path length to the nearest obstacle, the current velocity,
+    //  The maximum acceleration and deceleration, and the score given to the current path (which tells us how
+    //  good a path it is).
+    float_t ObjectAvoidance::GetPlannedVelocity(float_t path_len, float_t curr_vel, float_t score) {
+        // If path_len <= stopping_distance, return 0; stop now
+        // Do 1DTOC to find optimal speed given current and max velocity, max acceleration, and distance
+        // Scale result based on score
+        float_t decision = next_step_predictor(curr_vel, max_vel_, max_accel_, max_accel_, path_len);
+        float_t result = 0;
+        if (decision == 2) {
+            // We're already within the stopping distance. Our next goal velocity is zero.
+            // Since it's already zero, do nothing
+        } else if (decision == 1) {
+            // We're going at max speed already. Score aside, we should maintain that.
+            result = max_vel;
+            // Scale based on score here
+        } else {
+            // We aren't going at max speed, but we have enough space that we wish we were.
+            result = max_vel;
+            //Scale based on score here
+        }
+
+        return result;
+    }
 }
+

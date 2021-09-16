@@ -92,7 +92,8 @@ inline float* 1DTOC(float init_velocity, float max_velocity, float accel, float 
     and the possible acceleration and deceleration, this function returns 
     whether the vehicle should speed up, continue at this speed, or slow down.
 */
-inline int next_step_predictor(float velocity, float max_velocity, float accel, float decel, float dist_left) {
+inline float_t next_step_predictor(float velocity, float max_velocity, float accel, 
+                                    float decel, float dist_left) {
     if (acceleration_distance(velocity, 0, decel) <= dist_left) {
         return 2; //This means slow down. Replace with an enum
     } else if (velocity < max_velocity) {
