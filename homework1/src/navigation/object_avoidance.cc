@@ -59,8 +59,9 @@ namespace object_avoidance {
             // Find the turn magnitude, greater value means more straight.
             path.turn_magnitude = abs((paths_->at(paths_->size() - 1).curvature - abs(path.curvature)));
             // Calculate a path's final score.
-            // path.score = score_max_distance_weight_ * path.free_path_lengthv2 + score_min_turn_weight * 10.0 * path.turn_magnitude;
-            path.score = path.free_path_lengthv2;
+            path.score = (
+                score_max_distance_weight_ * path.free_path_length
+                + score_min_turn_weight * path.turn_magnitude);
         }
     };
 
@@ -158,18 +159,22 @@ namespace object_avoidance {
         else if (curvature < 0 && point[1] > car_specs_.total_side) {
             return 10.0;
         }
+
         float_t turning_radius = 1.0 / curvature;
-
-        float_t inner_radius = abs(turning_radius) - (car_specs_.car_width / 2) - car_specs_.car_safety_margin_side;
-
+        // Find the smallest radius of the car's swept volume. This point is along the inside
+        // part of the car along the wheelbase.
+        float_t inner_radius = abs(turning_radius) - car_specs_.total_side;
+        // Find the radius drawn out by the inner most edge of the front part of the robot.
+        // This determines if a point will collide with the front or the inner side of the
+        // car.
         float_t middle_radius = sqrt(
-            pow(abs(turning_radius) - (car_specs_.car_width / 2) - car_specs_.car_safety_margin_side, 2.0) + 
-            pow(-car_specs_.rear_axle_offset + (car_specs_.car_length / 2.0) + car_specs_.car_safety_margin_front, 2.0));
-
+            pow(abs(turning_radius) - car_specs_.total_side, 2.0) + 
+            pow(car_specs_.total_front, 2.0));
+        // Find the radius drawn out by the outter most edge of the front part of the robot.
+        // This determines if a point will collide with the front of the car.
         float_t outter_radius = sqrt(
             pow(abs(turning_radius) + car_specs_.total_side, 2.0) +
             pow(car_specs_.total_front, 2.0));
-
 
         float_t shortest_distance = 10.0;
         Eigen::Vector2f furthest_point;
@@ -177,7 +182,7 @@ namespace object_avoidance {
         // Find the distance from the center of turning circle to point
         float_t dist_to_point = GetDistance(0, turning_radius, point[0], point[1]);
 
-        float_t dist;
+        float_t collision_to_point;
         // collision along inside part of the car
         if (inner_radius <= dist_to_point && dist_to_point < middle_radius) {
             // Find the x-coordinate of the point of collision along the car. We know the
@@ -185,23 +190,25 @@ namespace object_avoidance {
             float_t x = sqrt(
                 pow(dist_to_point, 2) - pow(abs(turning_radius) - car_specs_.total_side, 2));
         
-            // Return the arclength between the collision point on the car and the obstacle.
+            // Find the L2 distance from the point of collision to where the obstacle
+            // point is right now. This will be used for arclength calculations.
             if (turning_radius < 0) {
-                dist = GetDistance(
-                x,
-                -((0.5 * car_specs_.car_width) + car_specs_.car_safety_margin_side),
-                point[0],
-                point[1]) / (2 * abs(dist_to_point));
+                // If we are turning right, the collision along the inside of the car
+                // will have a negative y component.
+                collision_to_point = GetDistance(
+                    x, -car_specs_.total_side, point[0], point[1]);
             }
             else {
-                dist = GetDistance(
-                x,
-                (0.5 * car_specs_.car_width - car_specs_.car_safety_margin_side),
-                point[0],
-                point[1]) / (2 * abs(dist_to_point));
+                // If turning left, the collision along the inside wall will have a
+                // positive y component.
+                collision_to_point = GetDistance(
+                    x, car_specs_.total_side, point[0], point[1]);
             }
-            float_t arc_length = abs(2 * abs(dist_to_point) * asin(dist));
-
+            // Arch length is equal to r*theta where
+            // theta := arccos(1 - (collision_to_point^2) / (2 * dist_to_point^2))
+            float_t arc_length = dist_to_point * 
+                acos(1 - (pow(collision_to_point, 2.0) / (2 * pow(dist_to_point, 2.0))));
+            // Keep track of whether this point gives a smaller possible distance to travel.
             if (arc_length <= shortest_distance) {
                 shortest_distance = arc_length;
                 furthest_point = point;
@@ -209,15 +216,19 @@ namespace object_avoidance {
         // collision along front of the car
         } else if (middle_radius <= dist_to_point && dist_to_point < outter_radius) {
             float_t y;
+
             if (turning_radius < 0) {
-                y = sqrt(pow(dist_to_point, 2.0) - pow(car_specs_.total_front, 2.0)) - abs(turning_radius);
+                y = sqrt(
+                    pow(dist_to_point, 2.0) - pow(car_specs_.total_front, 2.0)) - abs(turning_radius);
             } else {
                 y = turning_radius - sqrt(pow(dist_to_point, 2.0) - pow(car_specs_.total_front, 2.0));
             }
             // Calculate the distance from the point of collision along the car to the
             // current position of the car.
-            float_t dist_from_collision_to_point = GetDistance(car_specs_.total_front, y, point[0], point[1]);
-            float_t angle = acos(1 - pow(dist_from_collision_to_point, 2.0) / (2 * (pow(dist_to_point, 2.0))));
+            float_t dist_from_collision_to_point = GetDistance(
+                car_specs_.total_front, y, point[0], point[1]);
+            float_t angle = acos(
+                1 - pow(dist_from_collision_to_point, 2.0) / (2 * (pow(dist_to_point, 2.0))));
             float_t arc_length = dist_to_point * angle;
 
             if (arc_length <= shortest_distance) {

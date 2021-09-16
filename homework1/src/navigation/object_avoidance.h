@@ -63,7 +63,7 @@ namespace object_avoidance {
             paths_ptr paths_;
             // weight the max distance twice as much as not wanting to turn
             float_t score_max_distance_weight_ = 1.0;
-            float_t score_min_turn_weight = 1.0;
+            float_t score_min_turn_weight = 0.5;
         
             float_t FindMinPathLength(const std::vector<Eigen::Vector2f>& cloud, float_t curvature);
             float_t FindMinPathLengthv2(const std::vector<Eigen::Vector2f>& cloud, float_t curvature);
