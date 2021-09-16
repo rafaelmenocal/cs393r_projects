@@ -7,6 +7,9 @@
 
 #include <cmath>
 #include <math.h>
+#include "glog/logging.h"
+#include "ros/ros.h"
+
 
 
 namespace object_avoidance {
@@ -50,10 +53,11 @@ namespace object_avoidance {
             // Find the longest distance that can be traversed along this curve before
             // collusion with a point
             path.free_path_length = FindMinPathLength(cloud, path.curvature);
+            path.free_path_lengthv2 = FindMinPathLengthv2(cloud, path.curvature);            
             // Find the turn magnitude, greater value means more straight.
             path.turn_magnitude = abs((paths_->at(paths_->size() - 1).curvature - abs(path.curvature)));
             // Calculate a path's final score.
-            path.score = score_max_distance_weight_ * path.free_path_length + score_min_turn_weight * 10.0 * path.turn_magnitude;
+            path.score = score_max_distance_weight_ * path.free_path_lengthv2 + score_min_turn_weight * 10.0 * path.turn_magnitude;
             
         }
     };
@@ -79,6 +83,29 @@ namespace object_avoidance {
                 path_length = FindStraightPathLength(point); 
             } else {
                 path_length = FindCurvePathLength(point, curvature);
+            }
+            // Update the longest path possible if a shorter one has been calculated.
+            if (path_length < min_path_length) {
+                min_path_length = path_length;
+            }
+        }
+        return min_path_length;
+    }
+
+    // implements updated FindCurvePathLengthv2
+    float_t ObjectAvoidance::FindMinPathLengthv2(
+        const std::vector<Eigen::Vector2f>& cloud, float_t curvature) {
+
+        // maximum distance reading by laser
+        float min_path_length = 10.0;
+        float path_length;
+        for (const auto& point: cloud) {
+            // To avoid division by zero, send zero curvature path to special linear
+            // calculator.
+            if (curvature == 0) {
+                path_length = FindStraightPathLength(point); 
+            } else {
+                path_length = FindCurvePathLengthv2(point, curvature);
             }
             // Update the longest path possible if a shorter one has been calculated.
             if (path_length < min_path_length) {
@@ -216,21 +243,18 @@ namespace object_avoidance {
     }
 
     float_t ObjectAvoidance::FindCurvePathLengthv2(const Eigen::Vector2f& point, float_t curvature) {
+        
         float r = 1 / abs(curvature);
         Eigen::Vector2f turn_point = Eigen::Vector2f(0.0, r * int(curvature / abs(curvature)));
-
-        // if (point.x() < 0.0) {
-        //     return 10.0; // don't consider points behind car
-        // }
-
-        float r_min = r - car_specs_.car_width/2.0 - car_specs_.car_safety_margin_side;
+        
+        float r_min = r - (car_specs_.car_width / 2.0) - car_specs_.car_safety_margin_side;
         float r_mid = sqrt(pow(r_min, 2) + pow(-car_specs_.rear_axle_offset + (car_specs_.car_length / 2.0) + car_specs_.car_safety_margin_front, 2)); 
         float r_max = sqrt(pow(r + (car_specs_.car_width / 2.0) + car_specs_.car_safety_margin_side, 2) + pow(-car_specs_.rear_axle_offset + (car_specs_.car_length / 2.0) + car_specs_.car_safety_margin_front, 2)); 
         float r_obs = GetDistance(turn_point, point);
-
+        
         float Beta;
         float alpha;
-        if ((r_min <= r_obs) && (r_obs < r_mid)){ // point will hit the left side of car
+        if ((r_min <= r_obs) && (r_obs < r_mid)){ // point will hit the side of car
             Beta = acos(r - (car_specs_.car_width / 2.0) - car_specs_.car_safety_margin_side / r_obs);
         } else if ((r_mid <= r_obs) && (r_obs <= r_max)) {  // point will hit front of car
             Beta = asin((- car_specs_.rear_axle_offset + (car_specs_.car_length / 2.0) + car_specs_.car_safety_margin_front)/ r_obs);
@@ -238,8 +262,9 @@ namespace object_avoidance {
             return 10.0;
         }
         float dist = GetDistance(point, Eigen::Vector2f(0.0, 0.0));
-        alpha =  acos((pow(dist, 2) - pow(r, 2) - pow(r_obs, 2))/(2 * r * r_obs)) - Beta;
-        return alpha * r; // alpha in radians to path length
+        alpha =  acos((pow(r, 2) + pow(r_obs, 2) - pow(dist, 2))/(2 * r * r_obs)) - Beta;
+
+        return abs(alpha * r); // alpha in radians to path length
     }
 
 }

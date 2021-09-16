@@ -54,6 +54,7 @@ AckermannCurvatureDriveMsg drive_msg_; // velocity, curvature
 // Epsilon value for handling limited numerical precision.
 const float kEpsilon = 1e-5;
 float critical_time = 0.1;
+float critical_dist = 0.0;
 float speed = 0.0;
 float accel = 0.0;
 // float latency; // -0.2;
@@ -147,7 +148,7 @@ Vector2f GetOdomAcceleration(const Vector2f& last_vel,
 void PrintPaths(object_avoidance::paths_ptr paths){
   ROS_INFO("----------------------");
   for (const auto& path : *paths){
-    ROS_INFO("c = %f, fpl = %f, tm = %f, s = %f", path.curvature, path.free_path_length, path.turn_magnitude, path.score);
+    ROS_INFO("c = %f, fpl = %f, fplv2 = %f, tm = %f, s = %f", path.curvature, path.free_path_length, path.free_path_lengthv2, path.turn_magnitude, path.score);
   }
   ROS_INFO("----------------------");
 }
@@ -256,23 +257,17 @@ void Navigation::Run() {
   
   // -------START CONTROL---------------------------------------
 
-
   speed = VelocityToSpeed(odom_vel_);
   accel = VectorAccelToAccel(odom_accel_);
   critical_time =  speed / max_accel_;
   del_angle_ = odom_angle_ - last_odom_angle_;
-
-  // drawn_point_cloud_ = ProjectPointCloud2D(point_cloud_, odom_vel_, 1/update_frequency_, latency, del_angle_);
-  // visualization::DrawPointCloud(drawn_point_cloud_, 0x68ad7b); // green 
-  //visualization::DrawPointCloud(point_cloud_, 0x44def2, local_viz_msg_); //light blue
-  visualization::DrawRobot(car_width_, car_length_, rear_axle_offset_,
-                           car_safety_margin_front_, car_safety_margin_side_, drive_msg_, local_viz_msg_);
-  visualization::DrawTarget(nav_target, local_viz_msg_);
-
+  critical_dist = critical_time * speed; // needs to be updated
+  
   ROS_INFO("speed = %f", speed);
   ROS_INFO("accel = %f", accel);
   ROS_INFO("critical_time = %f", critical_time);
   ROS_INFO("latency = %f", latency);
+  ROS_INFO("critical_dist = %f", critical_dist);
   ROS_INFO("----------------------");
   ROS_INFO("odom_angle_ = %f", odom_angle_);
   ROS_INFO("last_odom_angle_ = %f", last_odom_angle_);
@@ -280,52 +275,59 @@ void Navigation::Run() {
   ROS_INFO("odom_start_angle_ = %f", odom_start_angle_);
   ROS_INFO("----------------------");
 
+  proj_point_cloud_ = ProjectPointCloud2D(point_cloud_, odom_vel_,
+                                          critical_time, latency, del_angle_);
+
   // Call out to the path planner object to update all the paths based on the latest
   // point cloud reading.
-  path_planner_->UpdatePaths(point_cloud_);
+  path_planner_->UpdatePaths(proj_point_cloud_);
   // since the target moves with the robot, this is also the scoring algorithm
-  drive_msg_.curvature = path_planner_->GetHighestScorePath();
-
+  drive_msg_.curvature = path_planner_->GetHighestScorePath(); //GetPlannedCurvature();
+  
   // Check the highest scoring path's length vs critical distance needed to full stop
-  // 
+  // drive_msg_.velocity = path_planner_->GetPlannedVelocity();
+
+  ROS_INFO("drive_msg_.curvature = %f", drive_msg_.curvature);
+  ROS_INFO("drive_msg_.velocity = %f", drive_msg_.velocity);
 
   // Draw and print all the paths
   DrawPaths(path_planner_->GetPaths());
   PrintPaths(path_planner_->GetPaths());
-
+  // drawn_point_cloud_ = ProjectPointCloud2D(point_cloud_, odom_vel_, 1/update_frequency_, latency, del_angle_);
+  // visualization::DrawPointCloud(drawn_point_cloud_, 0x68ad7b); // green 
+  // visualization::DrawPointCloud(point_cloud_, 0x44def2, local_viz_msg_); //light blue
+  visualization::DrawRobot(car_width_, car_length_, rear_axle_offset_,
+                           car_safety_margin_front_, car_safety_margin_side_, drive_msg_, local_viz_msg_);
+  visualization::DrawTarget(nav_target, local_viz_msg_);
   // Draw the path that was choosen by the object avoidance algorithm.
   visualization::DrawPathOption(drive_msg_.curvature, 5.0, 0, local_viz_msg_);
 
-  ROS_INFO("drive_msg_.curvature = %f", drive_msg_.curvature);
-  proj_point_cloud_ = ProjectPointCloud2D(point_cloud_, odom_vel_,
-                                          critical_time, latency, del_angle_);
-  // might need to update ProjectPointCloud2D to use curvature instead of del_angle_
-  // proj_point_cloud_ = ProjectPointCloud2D(point_cloud_, odom_vel_,
-  //                                         critical_time, latency, del_angle_);
+  // replace with path_planner_->GetPlannedVelocity();
   if (ProjectedPointCloudCollision(proj_point_cloud_, car_width_, car_length_,
                                    rear_axle_offset_, car_safety_margin_front_, car_safety_margin_side_)) {
     drive_msg_.velocity = 0.0;
-    ROS_INFO("drive_msg_.velocity = %f", drive_msg_.velocity);
-    if (speed == 0.0){
+  } else {
+    drive_msg_.velocity = max_vel_;    
+  }
+
+  // Display Driving Status
+  if ((drive_msg_.velocity == 0) && (speed == 0.0)){
       ROS_INFO("Status: Stopped");
     }
-    else {
+    else if (drive_msg_.velocity == 0) {
       ROS_INFO("Status: Stopping");
     }
-  } else {
-    drive_msg_.velocity = max_vel_;
-    ROS_INFO("drive_msg_.velocity = %f", drive_msg_.velocity);
-    if (drive_msg_.curvature == 0) { 
-      ROS_INFO("Status: Driving Straight");
-    } else if (drive_msg_.curvature > 0){
-      ROS_INFO("Status: Turning Left");
+    else { // driving
+      if (drive_msg_.curvature == 0) { 
+        ROS_INFO("Status: Driving Straight");
+      } else if (drive_msg_.curvature > 0){
+        ROS_INFO("Status: Turning Left");
+      }
+        else if (drive_msg_.curvature < 0){
+        ROS_INFO("Status: Turning Right");
+      }
     }
-    else if (drive_msg_.curvature < 0){
-      ROS_INFO("Status: Turning Right");
-    }
-  }
   
-
   ROS_INFO("=================END CONTROL==================");    
 
   // -------END CONTROL---------------------------------------
