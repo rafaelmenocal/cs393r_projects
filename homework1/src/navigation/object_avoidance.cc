@@ -61,9 +61,38 @@ namespace object_avoidance {
             // Calculate a path's final score.
             path.score = (
                 score_max_distance_weight_ * path.free_path_length
-                + score_min_turn_weight * path.turn_magnitude);
+                + score_min_turn_weight * path.turn_magnitude
+                + score_clearanse * path.clearance);
         }
+        FindPathClearances();
     };
+
+    /*
+    * Find the clearance for each path. This is the average path length of its 2 neighbors
+    */
+    void ObjectAvoidance::FindPathClearances() {
+        auto idx_left = (paths_->begin())++;
+        auto idx_right = (paths_->begin())++++;
+        auto second_to_last_idx = (paths_->end())----;
+        for (auto curr_path = paths_->begin(); curr_path != paths_->end(); curr_path++) {
+            curr_path->clearance += curr_path->free_path_length;
+            curr_path->clearance += idx_left->free_path_length;
+            curr_path->clearance += idx_right->free_path_length;
+            curr_path->clearance /= 3.0;
+            // If at the beginning of the paths, decrement the left index back to the first
+            // path.
+            if (curr_path == paths_->begin()) {
+                idx_left--;
+            // If at the second to last element, decrement the right element.
+            } else if (curr_path == second_to_last_idx) {
+                idx_right--;
+            // Not at either end, so increment all iterators
+            } else {
+                idx_left++;
+                idx_right++;
+            }
+        }
+    }
 
     /*
     * Function to find the longest traversable distance before collision along a given path

@@ -64,6 +64,7 @@ namespace object_avoidance {
             // weight the max distance twice as much as not wanting to turn
             float_t score_max_distance_weight_ = 1.0;
             float_t score_min_turn_weight = 0.5;
+            float_t score_clearanse = 2.0;
         
             float_t FindMinPathLength(const std::vector<Eigen::Vector2f>& cloud, float_t curvature);
             float_t FindMinPathLengthv2(const std::vector<Eigen::Vector2f>& cloud, float_t curvature);
@@ -76,6 +77,8 @@ namespace object_avoidance {
                 return sqrt(pow(point2.x() - point1.x(), 2) + pow(point2.y() - point1.y(), 2));
             }
             float_t FindCurvePathLengthv2(const Eigen::Vector2f& point, float_t curvature);
+            void FindPathClearances();
+
 
         public:
             // Constructor. Initialize the difference paths here.
