@@ -159,7 +159,7 @@ void PrintPaths(object_avoidance::paths_ptr paths){
 
 void DrawPaths(object_avoidance::paths_ptr paths){
   for (auto& path : *paths){
-    visualization::DrawPathOption(path.curvature, path.free_path_length, 0.0, local_viz_msg_);
+    visualization::DrawPathOption(path.curvature, path.free_path_lengthv2, 0.0, local_viz_msg_);
   }
 }
 
@@ -279,7 +279,7 @@ void Navigation::Run() {
   ROS_INFO("----------------------");
 
   proj_point_cloud_ = ProjectPointCloud2D(point_cloud_, odom_vel_,
-                                          critical_time, latency, del_angle_);
+                                          0.0, latency, del_angle_);
 
   // Call out to the path planner object to update all the paths based on the latest
   // point cloud reading.
@@ -287,8 +287,9 @@ void Navigation::Run() {
   // since the target moves with the robot, this is also the scoring algorithm
   drive_msg_.curvature = path_planner_->GetHighestScorePath(); //GetPlannedCurvature();
   
+  // critical_dist = 1/2 * car_specs_.velocity * critical_time;
   // Check the highest scoring path's length vs critical distance needed to full stop
-  // drive_msg_.velocity = path_planner_->GetPlannedVelocity();
+  // drive_msg_.velocity = path_planner_->GetPlannedVelocity(critical_dist);
 
   ROS_INFO("drive_msg_.curvature = %f", drive_msg_.curvature);
   ROS_INFO("drive_msg_.velocity = %f", drive_msg_.velocity);
@@ -303,7 +304,7 @@ void Navigation::Run() {
                            car_safety_margin_front_, car_safety_margin_side_, drive_msg_, local_viz_msg_);
   visualization::DrawTarget(nav_target, local_viz_msg_);
   // Draw the path that was choosen by the object avoidance algorithm.
-  visualization::DrawPathOption(drive_msg_.curvature, 5.0, 0, local_viz_msg_);
+  visualization::DrawPathOption(drive_msg_.curvature, 1.0, 0, local_viz_msg_);
 
   // replace with path_planner_->GetPlannedVelocity();
   if (ProjectedPointCloudCollision(proj_point_cloud_, car_width_, car_length_,
@@ -315,21 +316,21 @@ void Navigation::Run() {
 
   // Display Driving Status
   if ((drive_msg_.velocity == 0) && (speed == 0.0)){
-      ROS_INFO("Status: Stopped");
+    ROS_INFO("Status: Stopped");
+  }
+  else if (drive_msg_.velocity == 0) {
+    ROS_INFO("Status: Stopping");
+  }
+  else { // driving
+    if (drive_msg_.curvature == 0) { 
+      ROS_INFO("Status: Driving Straight");
+    } else if (drive_msg_.curvature > 0){
+      ROS_INFO("Status: Turning Left");
     }
-    else if (drive_msg_.velocity == 0) {
-      ROS_INFO("Status: Stopping");
+      else if (drive_msg_.curvature < 0){
+      ROS_INFO("Status: Turning Right");
     }
-    else { // driving
-      if (drive_msg_.curvature == 0) { 
-        ROS_INFO("Status: Driving Straight");
-      } else if (drive_msg_.curvature > 0){
-        ROS_INFO("Status: Turning Left");
-      }
-        else if (drive_msg_.curvature < 0){
-        ROS_INFO("Status: Turning Right");
-      }
-    }
+  }
   
   ROS_INFO("=================END CONTROL==================");    
 
