@@ -57,8 +57,8 @@ namespace object_avoidance {
             // Find the turn magnitude, greater value means more straight.
             path.turn_magnitude = abs((paths_->at(paths_->size() - 1).curvature - abs(path.curvature)));
             // Calculate a path's final score.
-            path.score = score_max_distance_weight_ * path.free_path_lengthv2 + score_min_turn_weight * 10.0 * path.turn_magnitude;
-            
+            // path.score = score_max_distance_weight_ * path.free_path_lengthv2 + score_min_turn_weight * 10.0 * path.turn_magnitude;
+            path.score = path.free_path_lengthv2;
         }
     };
 
@@ -125,6 +125,7 @@ namespace object_avoidance {
     */ 
     float_t ObjectAvoidance::FindStraightPathLength(const Eigen::Vector2f& point) {
         // First check if the y position is within the swept volume of the robot
+        // ROS_INFO("point = (%f, %f)", point.x(), point.y());
         if (abs(point[1]) <= car_specs_.total_side) {
             return point[0] - car_specs_.total_front;
         }  else {
@@ -259,12 +260,12 @@ namespace object_avoidance {
         } else if ((r_mid <= r_obs) && (r_obs <= r_max)) {  // point will hit front of car
             Beta = asin((- car_specs_.rear_axle_offset + (car_specs_.car_length / 2.0) + car_specs_.car_safety_margin_front)/ r_obs);
         } else{ // else point doesn't hit car
-            return 10.0;
+            return std::min(float(10.0), float((r * M_PI/2)));
         }
         float dist = GetDistance(point, Eigen::Vector2f(0.0, 0.0));
         alpha =  acos((pow(r, 2) + pow(r_obs, 2) - pow(dist, 2))/(2 * r * r_obs)) - Beta;
 
-        return abs(alpha * r); // alpha in radians to path length
+        return std::min(float(abs(alpha * r)), float((r * M_PI/2))); // alpha in radians to path length
     }
 
 }
