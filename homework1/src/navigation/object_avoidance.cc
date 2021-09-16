@@ -265,7 +265,7 @@ namespace object_avoidance {
         float dist = GetDistance(point, Eigen::Vector2f(0.0, 0.0));
         alpha =  acos((pow(r, 2) + pow(r_obs, 2) - pow(dist, 2))/(2 * r * r_obs)) - Beta;
 
-        return std::min(float(abs(alpha * r)), float((r * M_PI/2))); // alpha in radians to path length
+        return abs(alpha * r); //std::min(float(abs(alpha * r)), float((r * M_PI/2))); // alpha in radians to path length
     }
 
 }
