@@ -64,7 +64,7 @@ namespace object_avoidance {
             // weight the max distance twice as much as not wanting to turn
             float_t score_max_distance_weight_ = 1.0;
             float_t score_min_turn_weight = 0.5;
-            float_t score_clearanse = 2.0;
+            float_t score_clearanse = 4.0;
         
             float_t FindMinPathLength(const std::vector<Eigen::Vector2f>& cloud, float_t curvature);
             float_t FindMinPathLengthv2(const std::vector<Eigen::Vector2f>& cloud, float_t curvature);
@@ -90,7 +90,7 @@ namespace object_avoidance {
             // Simple public getter function for accessing candidate paths.
             inline paths_ptr GetPaths() {return paths_;};
             // Return the curvature with the highest score.
-            float_t GetHighestScorePath();
+            PathOption GetHighestScorePath();
     };
 
 } // namespace object_avoidance

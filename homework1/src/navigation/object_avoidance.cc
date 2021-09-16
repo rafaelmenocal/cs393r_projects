@@ -273,13 +273,12 @@ namespace object_avoidance {
     * 
     * @return curvature of the highest scoring path
     */
-    float_t ObjectAvoidance::GetHighestScorePath() {
-        return std::max_element(
+    PathOption ObjectAvoidance::GetHighestScorePath() {
+        return *std::max_element(
             paths_->begin(),
             paths_->end(),
             [](const PathOption& lhs, const PathOption& rhs){
-                return lhs.score < rhs.score;}
-            )->curvature;
+                return lhs.score < rhs.score;});
     }
 
     float_t ObjectAvoidance::FindCurvePathLengthv2(const Eigen::Vector2f& point, float_t curvature) {

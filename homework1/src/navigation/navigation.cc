@@ -115,8 +115,8 @@ bool PointWithinSafetyMargin(const Vector2f& proj_point,
 }
 
 bool ProjectedPointCloudCollision(const std::vector<Vector2f>& proj_point_cloud_,
-                                  float width, float length,
-                                  float axle_offset, float safety_margin_front, float safety_margin_side) {
+                                  float width, float length, float axle_offset,
+                                  float safety_margin_front, float safety_margin_side) {
   for (const auto& projected_point: proj_point_cloud_){
     if (PointWithinSafetyMargin(projected_point, width, length, axle_offset, safety_margin_front, safety_margin_side)){
       //draw a red point where identified point is within safety margin
@@ -160,6 +160,18 @@ void PrintPaths(object_avoidance::paths_ptr paths){
 void DrawPaths(object_avoidance::paths_ptr paths){
   for (auto& path : *paths){
     visualization::DrawPathOption(path.curvature, path.free_path_lengthv2, 0.0, local_viz_msg_);
+  }
+}
+
+float_t CalculateVelocityMsg(
+  float_t free_path_length,
+  float_t critical_dist,
+  float_t max_vel) {
+
+  if (free_path_length < critical_dist) {
+    return 0.0;
+  } else {
+    return max_vel;
   }
 }
 
@@ -285,8 +297,8 @@ void Navigation::Run() {
   // point cloud reading.
   path_planner_->UpdatePaths(proj_point_cloud_);
   // since the target moves with the robot, this is also the scoring algorithm
-  drive_msg_.curvature = path_planner_->GetHighestScorePath(); //GetPlannedCurvature();
-  
+  auto best_path = path_planner_->GetHighestScorePath(); //GetPlannedCurvature();
+  drive_msg_.curvature = best_path.curvature;
   // critical_dist = 1/2 * car_specs_.velocity * critical_time;
   // Check the highest scoring path's length vs critical distance needed to full stop
   // drive_msg_.velocity = path_planner_->GetPlannedVelocity(critical_dist);
@@ -311,9 +323,8 @@ void Navigation::Run() {
                                    rear_axle_offset_, car_safety_margin_front_, car_safety_margin_side_)) {
     drive_msg_.velocity = 0.0;
   } else {
-    drive_msg_.velocity = max_vel_;    
+    drive_msg_.velocity = CalculateVelocityMsg(best_path.free_path_length, critical_dist, max_vel_);
   }
-
   // Display Driving Status
   if ((drive_msg_.velocity == 0) && (speed == 0.0)){
     ROS_INFO("Status: Stopped");
