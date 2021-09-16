@@ -44,6 +44,7 @@ namespace object_avoidance {
         float_t curvature;
         float_t clearance;
         float_t free_path_length;
+        float_t free_path_lengthv2;
         float_t score;
         float_t turn_magnitude;
         Eigen::Vector2f obstruction;
@@ -65,6 +66,7 @@ namespace object_avoidance {
             float_t score_min_turn_weight = 1.0;
         
             float_t FindMinPathLength(const std::vector<Eigen::Vector2f>& cloud, float_t curvature);
+            float_t FindMinPathLengthv2(const std::vector<Eigen::Vector2f>& cloud, float_t curvature);
             float_t FindStraightPathLength(const Eigen::Vector2f& point);
             float_t FindCurvePathLength(const Eigen::Vector2f& point, float_t curvature);
             inline float_t GetDistance(float_t x0, float_t y0, float_t x1, float_t y1) {
