@@ -71,9 +71,9 @@ namespace object_avoidance {
     * Find the clearance for each path. This is the average path length of its 2 neighbors
     */
     void ObjectAvoidance::FindPathClearances() {
-        auto idx_left = (paths_->begin())++;
-        auto idx_right = (paths_->begin())++++;
-        auto second_to_last_idx = (paths_->end())----;
+        auto idx_left = std::next(paths_->begin(), 1);
+        auto idx_right = std::next(paths_->begin(), 2);
+        auto second_to_last_idx = std::prev(paths_->end(), 2);
         for (auto curr_path = paths_->begin(); curr_path != paths_->end(); curr_path++) {
             curr_path->clearance += curr_path->free_path_length;
             curr_path->clearance += idx_left->free_path_length;
