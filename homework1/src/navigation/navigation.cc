@@ -99,7 +99,7 @@ std::vector<Vector2f> ProjectPointCloud2D(const std::vector<Vector2f>& point_clo
   // angle = angle * M_PI / 180.0; // convert deg to radians
   // ROS_INFO("del_angle_rad_ = %f", angle);
   Eigen::Rotation2Df rot(-angle);
-  Vector2f spped = Vector2f(VelocityToSpeed(velocity), 0.0);
+  Vector2f speed = Vector2f(VelocityToSpeed(velocity), 0.0);
   for (const auto& point : point_cloud_){
     Vector2f proj_point = (rot * (point - (critical_time + latency) * speed));
     proj_point_cloud_.push_back(proj_point);
