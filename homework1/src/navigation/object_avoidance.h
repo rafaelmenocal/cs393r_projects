@@ -89,7 +89,7 @@ namespace object_avoidance {
             // Return the curvature with the highest score.
             float_t GetHighestScorePath();
             // Return the optimal velocity based on path length, current speed and path score.
-            float_t GetPlannedVelocity(float_t path_len, float_t curr_vel, float_t score);
+            float_t GetPlannedVelocity(PathOption *path, float_t curr_vel);
     };
 
 } // namespace object_avoidance

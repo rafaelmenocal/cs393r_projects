@@ -273,11 +273,11 @@ namespace object_avoidance {
     //  Choose an optimal velocity based on the path length to the nearest obstacle, the current velocity,
     //  The maximum acceleration and deceleration, and the score given to the current path (which tells us how
     //  good a path it is).
-    float_t ObjectAvoidance::GetPlannedVelocity(float_t path_len, float_t curr_vel, float_t score) {
+    float_t ObjectAvoidance::GetPlannedVelocity(PathOption *path, float_t curr_vel) {
         // If path_len <= stopping_distance, return 0; stop now
         // Do 1DTOC to find optimal speed given current and max velocity, max acceleration, and distance
         // Scale result based on score
-        float_t decision = next_step_predictor(curr_vel, max_vel_, max_accel_, max_accel_, path_len);
+        float_t decision = next_step_predictor(curr_vel, max_vel_, max_accel_, max_accel_, path->free_path_length);
         float_t result = 0;
         if (decision == 2) {
             // We're already within the stopping distance. Our next goal velocity is zero.
@@ -285,7 +285,7 @@ namespace object_avoidance {
         } else if (decision == 1) {
             // We're going at max speed already. Score aside, we should maintain that.
             result = max_vel;
-            // Scale based on score here
+            // Scale based on score here (path->score)
         } else {
             // We aren't going at max speed, but we have enough space that we wish we were.
             result = max_vel;
