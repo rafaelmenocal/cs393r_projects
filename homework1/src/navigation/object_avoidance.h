@@ -40,15 +40,30 @@ namespace object_avoidance {
 
     };
 
+    struct CollisionPoint {
+        float_t free_path_length;
+        float_t angle;
+        Eigen::Vector2f point;
+
+        CollisionPoint() {free_path_length = 10.0; angle = 0.0;};
+        CollisionPoint(float_t fpl, float_t a, Eigen::Vector2f point) :
+            free_path_length(fpl), angle(a), point(point) {};
+    };
+
     struct PathOption {
         float_t curvature;
         float_t clearance;
-        float_t free_path_length;
+        float_t free_path_length = 10.0;
         float_t free_path_lengthv2;
         float_t score;
         float_t turn_magnitude;
         Eigen::Vector2f obstruction;
         Eigen::Vector2f closest_point;
+        // Keep track of all the points in a given reading.
+        std::vector<CollisionPoint> points;
+        CollisionPoint collision_point;
+        float_t inner_radius;
+        float_t outer_radius;
     };
 
     // Just for making typing easier.
@@ -62,14 +77,14 @@ namespace object_avoidance {
             // Keep a master list of all the candidate path options.
             paths_ptr paths_;
             // weight the max distance twice as much as not wanting to turn
-            float_t score_max_distance_weight_ = 1.0;
+            float_t score_max_distance_weight_ = 6.0;
             float_t score_min_turn_weight = 0.5;
-            float_t score_clearanse = 4.0;
+            float_t score_clearanse = 2.0;
         
-            float_t FindMinPathLength(const std::vector<Eigen::Vector2f>& cloud, float_t curvature);
+            CollisionPoint FindMinPathLength(const std::vector<Eigen::Vector2f>& cloud, PathOption* path);
             float_t FindMinPathLengthv2(const std::vector<Eigen::Vector2f>& cloud, float_t curvature);
-            float_t FindStraightPathLength(const Eigen::Vector2f& point);
-            float_t FindCurvePathLength(const Eigen::Vector2f& point, float_t curvature);
+            CollisionPoint FindStraightPathLength(const Eigen::Vector2f& point, PathOption* path);
+            CollisionPoint FindCurvePathLength(const Eigen::Vector2f& point, PathOption* path);
             inline float_t GetDistance(float_t x0, float_t y0, float_t x1, float_t y1) {
                 return sqrt(pow(x1 - x0, 2.0) + pow(y1 - y0, 2.0));
             }
@@ -77,7 +92,8 @@ namespace object_avoidance {
                 return sqrt(pow(point2.x() - point1.x(), 2) + pow(point2.y() - point1.y(), 2));
             }
             float_t FindCurvePathLengthv2(const Eigen::Vector2f& point, float_t curvature);
-            void FindPathClearances();
+            void FindPathClearance(PathOption* path);
+            float_t GetAngleBetweenPoints();
 
 
         public:

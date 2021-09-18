@@ -54,8 +54,15 @@ namespace object_avoidance {
         for (auto& path : *paths_) {
             // Find the longest distance that can be traversed along this curve before
             // collusion with a point
-            path.free_path_length = FindMinPathLength(cloud, path.curvature);
-            path.free_path_lengthv2 = FindMinPathLengthv2(cloud, path.curvature);            
+            path.collision_point = FindMinPathLength(cloud, &path);
+            path.free_path_length = std::min(path.collision_point.free_path_length, float_t(5.0));
+            // Now for this path we have the point the robot will collide with before
+            // moving r * pi/2 along the arc. We can now calculate the clearance for 
+            // this path. Since we know the angle from the car to the collision point,
+            // any other point which has a smaller angle from the car to the point
+            // would be passed by the car before collision. 
+            FindPathClearance(&path);
+            //path.free_path_lengthv2 = FindMinPathLengthv2(cloud, path.curvature);            
             // Find the turn magnitude, greater value means more straight.
             path.turn_magnitude = abs((paths_->at(paths_->size() - 1).curvature - abs(path.curvature)));
             // Calculate a path's final score.
@@ -64,34 +71,52 @@ namespace object_avoidance {
                 + score_min_turn_weight * path.turn_magnitude
                 + score_clearanse * path.clearance);
         }
-        FindPathClearances();
     };
 
     /*
-    * Find the clearance for each path. This is the average path length of its 2 neighbors
+    * Find the clearance for each path. This is the average path length of its 2
+    * neighbors
     */
-    void ObjectAvoidance::FindPathClearances() {
-        auto idx_left = std::next(paths_->begin(), 1);
-        auto idx_right = std::next(paths_->begin(), 2);
-        auto second_to_last_idx = std::prev(paths_->end(), 2);
-        for (auto curr_path = paths_->begin(); curr_path != paths_->end(); curr_path++) {
-            curr_path->clearance += curr_path->free_path_length;
-            curr_path->clearance += idx_left->free_path_length;
-            curr_path->clearance += idx_right->free_path_length;
-            curr_path->clearance /= 3.0;
-            // If at the beginning of the paths, decrement the left index back to the first
-            // path.
-            if (curr_path == paths_->begin()) {
-                idx_left--;
-            // If at the second to last element, decrement the right element.
-            } else if (curr_path == second_to_last_idx) {
-                idx_right--;
-            // Not at either end, so increment all iterators
-            } else {
-                idx_left++;
-                idx_right++;
+    void ObjectAvoidance::FindPathClearance(PathOption* path) {
+        // Intialize a vector to store all the clearances from the points which are ahead
+        // of the robot
+        std::vector<float_t> clearances;
+        // For 0 curvature, the calculations are a bit different. Consider all the points
+        // up until the collision point.
+        if (path->curvature == 0.0) {
+            for (auto point : path->points) {
+                // Only consider the points which the robot will pass before colliding.
+                if (point.point.x() < path->free_path_length) {
+                    clearances.push_back(abs(point.point.y()) - car_specs_.total_side);
+                }
             }
         }
+        else {
+            Eigen::Vector2f p1(0, 1 / path->curvature);
+            ROS_INFO("c=%f. collision %f %f", path->curvature, path->collision_point.angle, path->collision_point.free_path_length);
+            for (auto point : path->points) {
+                // If the point along the baseline and on the circle drawn by p to point p is
+                // has an angle larger than the angle to the collision point, the car will not
+                // pass this point before collision.
+                if (point.angle < path->collision_point.angle) {
+                    auto point_radius = GetDistance(p1, point.point);
+
+                    if (point_radius < abs(path->inner_radius)) {
+                        clearances.push_back(path->inner_radius - point_radius);
+                    }
+                    else {
+                        clearances.push_back(point_radius - path->outer_radius);
+                    }
+                }
+            }
+        }
+        // Find the smallest clearance.
+        if (clearances.size() != 0) {
+            path->clearance = *std::min_element(clearances.begin(), clearances.end());
+        } else {
+            path->clearance = 1.0;
+        }
+        path->clearance = std::min(path->clearance, float_t(1.0));
     }
 
     /*
@@ -102,50 +127,61 @@ namespace object_avoidance {
     * 
     * @return the longest path along the given curve before any collision
     */
-    float_t ObjectAvoidance::FindMinPathLength(
-        const std::vector<Eigen::Vector2f>& cloud, float_t curvature) {
+    CollisionPoint ObjectAvoidance::FindMinPathLength(
+        const std::vector<Eigen::Vector2f>& cloud, PathOption* path) {
 
+        // Since this is a new cloud, clear out all the previous points.
+        path->points.clear();
         // maximum distance reading by laser
-        float min_path_length = 10.0;
-        float path_length;
+        float_t min_straight_path_length = 5.0;
+        float_t min_path_length = abs(float_t(3.1415) / path->curvature);
+        CollisionPoint collision_point;
+        CollisionPoint closest_point;
         for (const auto& point: cloud) {
             // To avoid division by zero, send zero curvature path to special linear
             // calculator.
-            if (curvature == 0) {
-                path_length = FindStraightPathLength(point); 
+            if (path->curvature == 0) {
+                collision_point = FindStraightPathLength(point, path); 
+                // Update the longest path possible if a shorter one has been calculated.
+                if (collision_point.free_path_length <= min_straight_path_length) {
+                    closest_point = collision_point;
+                    min_straight_path_length = closest_point.free_path_length;
+                }
             } else {
-                path_length = FindCurvePathLength(point, curvature);
-            }
-            // Update the longest path possible if a shorter one has been calculated.
-            if (path_length < min_path_length) {
-                min_path_length = path_length;
+                collision_point = FindCurvePathLength(point, path);
+                // Update the longest path possible if a shorter one has been calculated.
+                if (collision_point.free_path_length <= min_path_length) {
+                    closest_point = collision_point;
+                    min_path_length = collision_point.free_path_length;
+                }
             }
         }
-        return min_path_length;
+        
+        return closest_point;
     }
 
-    // implements updated FindCurvePathLengthv2
-    float_t ObjectAvoidance::FindMinPathLengthv2(
-        const std::vector<Eigen::Vector2f>& cloud, float_t curvature) {
+    // // implements updated FindCurvePathLengthv2
+    // float_t ObjectAvoidance::FindMinPathLengthv2(
+    //     const std::vector<Eigen::Vector2f>& cloud, float_t curvature) {
 
-        // maximum distance reading by laser
-        float min_path_length = 10.0;
-        float path_length;
-        for (const auto& point: cloud) {
-            // To avoid division by zero, send zero curvature path to special linear
-            // calculator.
-            if (curvature == 0) {
-                path_length = FindStraightPathLength(point); 
-            } else {
-                path_length = FindCurvePathLengthv2(point, curvature);
-            }
-            // Update the longest path possible if a shorter one has been calculated.
-            if (path_length < min_path_length) {
-                min_path_length = path_length;
-            }
-        }
-        return min_path_length;
-    }
+    //     // maximum distance reading by laser
+    //     float min_path_length = 10.0;
+    //     float path_length;
+    //     for (const auto& point: cloud) {
+    //         // To avoid division by zero, send zero curvature path to special linear
+    //         // calculator.
+    //         if (curvature == 0) {
+    //             path_length = FindStraightPathLength(point); 
+    //         } else {
+    //             path_length = FindCurvePathLengthv2(point, curvature);
+    //         }
+    //         // Update the longest path possible if a shorter one has been calculated.
+    //         if (path_length < min_path_length) {
+    //             min_path_length = path_length;
+    //         }
+    //     }
+    //     return min_path_length;
+    // }
 
     /*
     * Find the longest traversable distance before collision along a straight path
@@ -155,44 +191,103 @@ namespace object_avoidance {
     * @return the longest path until collision with the point. Returns 10.0 if no
     * collision with the point
     */ 
-    float_t ObjectAvoidance::FindStraightPathLength(const Eigen::Vector2f& point) {
-        // First check if the y position is within the swept volume of the robot
-        // ROS_INFO("point = (%f, %f)", point.x(), point.y());
-        if (abs(point[1]) <= car_specs_.total_side) {
-            // TODO(alex): Why would this be negative?
-            return std::max(point[0] - car_specs_.total_front, (float_t)0.0);
-        }  else {
-            return 10.0;
+    CollisionPoint ObjectAvoidance::FindStraightPathLength(
+        const Eigen::Vector2f& point, PathOption* path) {
+        
+        
+        // Only consider points that are ahead of the robot's base link
+        if (point.x() > 0) {
+            // Add this point since it is ahead of the car. We don't really care about
+            // the arclength/angle here because for the straight path, clearance is
+            // determined by straight lines.
+            path->points.push_back(
+                CollisionPoint(point[0] - car_specs_.total_front, float_t(0), point));
+            
+            // Now check for collision. This will happen if the point is within the swept
+            // volume of the car.
+            if (abs(point[1]) <= car_specs_.total_side) {
+                // The car will eventually collide, so find the distance from the front
+                // of the car to the point.
+                return CollisionPoint(
+                    std::max(point[0] - car_specs_.total_front, (float_t)0.0), 0.0, point);
+            }  else {
+                // No collision ever.
+                return CollisionPoint(float_t(5.0), float_t(0.0), point);
+            }
         }
+        // Don't worry about colliding with points which are behind the car.
+        return CollisionPoint(float_t(5.0), float_t(0.0), point);
     }
 
     /*
     * Find the longest traversable distance before collision along a curved path
     * 
     * @param point: the point to check for collision with
-    * @param curvature: the curvature of the path
+    * @param curvature: the path struct
     * 
     * @return the longest path until collision with the point. Returns 10.0 if no
     * collision with the point
     */ 
-    float_t ObjectAvoidance::FindCurvePathLength(
-        const Eigen::Vector2f& point, float_t curvature) {
+    CollisionPoint ObjectAvoidance::FindCurvePathLength(
+        const Eigen::Vector2f& point, PathOption* path) {
+    
+        // Set up some resued values.
+        float_t pi = 3.1415;
+        float_t max_arc_length = abs(pi / path->curvature);
+    
+        // If the point is behind the car then the smallest possible angle along a given
+        // is pi/2. Note it could actually be larger, but this is sufficient for planning
+        if (point.x() < 0) {
+            return CollisionPoint(max_arc_length, pi, point);
+        }
         
+        float_t turning_radius = 1.0 / path->curvature;
+        // Find the distance from the center of turning circle to point under consideration.
+        float_t dist_to_point = GetDistance(0, turning_radius, point[0], point[1]);
+
+        // Find the point which lies at x=0 along the arc drawn out by this point and
+        // the center of turning. The origin in this coordinate system is the center of the
+        // turning circle.
+        float_t sign = (turning_radius < 0.0) ? float_t(1.0) : float_t(-1.0);
+        auto point_along_arc = Eigen::Vector2f(0.0, sign * abs(dist_to_point));
+
+        // NOTE: point is in the reference of the robot, we need to translate it to a
+        // coordinate system centered at the turning center.
+        auto point_translated = Eigen::Vector2f(point.x(), point.y() - turning_radius);
+
+        // We have two points along the arc drawn by the collision point. Find the angle
+        // between these points. The angle will determine whether the robot would actually
+        // pass this point before hitting the collision point.
+        float_t l2_distance = GetDistance(point_along_arc, point_translated);
+        float_t angle = acos(
+            1 - pow(l2_distance, 2.0) / (2 * (pow(dist_to_point, 2.0))));
+
+        if (path->curvature < 0 && point.y() > car_specs_.total_side) {
+            path->points.push_back(
+                CollisionPoint(max_arc_length, pi, point));
+        } else if (path->curvature > 0 && point.y() < -car_specs_.total_side) {
+            path->points.push_back(
+                    CollisionPoint(max_arc_length, pi, point));
+        } else {
+            path->points.push_back(
+                CollisionPoint(dist_to_point * angle, angle, point));
+        }
+
         // If we are turning left and the point under consideration is below the bottom
         // of the car, we won't hit the point until we circle all the way back around.
-        if (curvature > 0 && point[1] < -car_specs_.total_side) {
-            return 10.0;
+        if (path->curvature > 0 && point[1] < -car_specs_.total_side) {
+            return CollisionPoint(max_arc_length, pi, point);
         }
         // If we are turning right and the point under consideration is above the top part
         // of the car, we won't hit the point until we circle all the way back around.
-        else if (curvature < 0 && point[1] > car_specs_.total_side) {
-            return 10.0;
+        else if (path->curvature < 0 && point[1] > car_specs_.total_side) {
+            return CollisionPoint(max_arc_length, pi, point);
         }
 
-        float_t turning_radius = 1.0 / curvature;
         // Find the smallest radius of the car's swept volume. This point is along the inside
         // part of the car along the wheelbase.
         float_t inner_radius = abs(turning_radius) - car_specs_.total_side;
+        path->inner_radius = inner_radius;
         // Find the radius drawn out by the inner most edge of the front part of the robot.
         // This determines if a point will collide with the front or the inner side of the
         // car.
@@ -204,12 +299,12 @@ namespace object_avoidance {
         float_t outter_radius = sqrt(
             pow(abs(turning_radius) + car_specs_.total_side, 2.0) +
             pow(car_specs_.total_front, 2.0));
-
-        float_t shortest_distance = 10.0;
+        
+        path->outer_radius = outter_radius;
+    
+        float_t shortest_distance = max_arc_length;
+        float_t angle_with_collision_point = pi;
         Eigen::Vector2f furthest_point;
-
-        // Find the distance from the center of turning circle to point
-        float_t dist_to_point = GetDistance(0, turning_radius, point[0], point[1]);
 
         float_t collision_to_point;
         // collision along inside part of the car
@@ -263,9 +358,11 @@ namespace object_avoidance {
             if (arc_length <= shortest_distance) {
                 shortest_distance = arc_length;
                 furthest_point = point;
+                angle_with_collision_point = angle;
             }
         }
-        return shortest_distance;
+
+        return CollisionPoint(shortest_distance, angle_with_collision_point, point);
     }
 
     /*

@@ -65,7 +65,7 @@ float del_angle_ = 0.0;
 std::vector<Vector2f> proj_point_cloud_;
 std::vector<Vector2f> drawn_point_cloud_;
 Eigen::Vector2f nav_target = Vector2f(5.0,0.0);
-int odd_num_paths = 101; // make sure this is odd
+int odd_num_paths = 31; // make sure this is odd
 } //namespace
 
 namespace navigation {
@@ -152,7 +152,9 @@ Vector2f GetOdomAcceleration(const Vector2f& last_vel,
 void PrintPaths(object_avoidance::paths_ptr paths){
   ROS_INFO("----------------------");
   for (const auto& path : *paths){
-    ROS_INFO("c = %f, fpl = %f, fplv2 = %f, tm = %f, s = %f", path.curvature, path.free_path_length, path.free_path_lengthv2, path.turn_magnitude, path.score);
+    ROS_INFO(
+      "c = %f, fpl = %f, cl = %f, tm = %f, s = %f",
+      path.curvature, path.free_path_length, path.clearance, path.turn_magnitude, path.score);
   }
   ROS_INFO("----------------------");
 }
@@ -160,7 +162,7 @@ void PrintPaths(object_avoidance::paths_ptr paths){
 
 void DrawPaths(object_avoidance::paths_ptr paths){
   for (auto& path : *paths){
-    visualization::DrawPathOption(path.curvature, path.free_path_lengthv2, 0.0, local_viz_msg_);
+    visualization::DrawPathOption(path.curvature, path.free_path_length, 0.0, local_viz_msg_);
   }
 }
 
@@ -297,8 +299,10 @@ void Navigation::Run() {
   // Call out to the path planner object to update all the paths based on the latest
   // point cloud reading.
   path_planner_->UpdatePaths(proj_point_cloud_);
+  
   // since the target moves with the robot, this is also the scoring algorithm
   auto best_path = path_planner_->GetHighestScorePath(); //GetPlannedCurvature();
+
   drive_msg_.curvature = best_path.curvature;
   // critical_dist = 1/2 * car_specs_.velocity * critical_time;
   // Check the highest scoring path's length vs critical distance needed to full stop
@@ -343,6 +347,7 @@ void Navigation::Run() {
       ROS_INFO("Status: Turning Right");
     }
   }
+  
   
   ROS_INFO("=================END CONTROL==================");    
 
