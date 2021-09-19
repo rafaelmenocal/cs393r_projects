@@ -153,7 +153,13 @@ void DrawPathOption(const float curvature,
 // convenient method to draw all aspects of the robot boundaries, wheels, etc
 void DrawRobot(
   float width, float length, float axle_offset, float safety_margin_front, float safety_margin_side,
-  const amrl_msgs::AckermannCurvatureDriveMsg& drive_msg, VisualizationMsg& viz_msg){
+  const amrl_msgs::AckermannCurvatureDriveMsg& drive_msg, VisualizationMsg& viz_msg, const bool collision){
+  uint32_t color;
+  if (collision) {
+    color = 0xf70c0c;
+  } else {
+    color = 0x68ad7b;
+  }
   // draw velocity/curve vector/path
   visualization::DrawPathOption(
     drive_msg.curvature, drive_msg.velocity, drive_msg.curvature, viz_msg);
@@ -178,19 +184,19 @@ void DrawRobot(
   // draw robot safety margin
   visualization::DrawLine(Vector2f(-axle_offset - (length/2.0) - safety_margin_front, safety_margin_side + width/2.0), 
                           Vector2f(-axle_offset + (length/2.0) + safety_margin_front, safety_margin_side + width/2.0),
-                          0x68ad7b,
+                          color,
                           viz_msg);
   visualization::DrawLine(Vector2f(-axle_offset - (length/2.0) - safety_margin_front, -safety_margin_side-width/2.0), 
                           Vector2f(-axle_offset + (length/2.0) + safety_margin_front, -safety_margin_side-width/2.0),
-                          0x68ad7b,
+                          color,
                           viz_msg);
   visualization::DrawLine(Vector2f(-axle_offset - (length/2.0) - safety_margin_front, safety_margin_side+width/2.0), 
                           Vector2f(-axle_offset - (length/2.0) - safety_margin_front, -safety_margin_side-width/2.0),
-                          0x68ad7b,
+                          color,
                           viz_msg);
   visualization::DrawLine(Vector2f(-axle_offset + (length/2.0) + safety_margin_front, safety_margin_side+width/2.0),
                           Vector2f(-axle_offset + (length/2.0) + safety_margin_front, -safety_margin_side-width/2.0),
-                          0x68ad7b,
+                          color,
                           viz_msg);
   return;
 }

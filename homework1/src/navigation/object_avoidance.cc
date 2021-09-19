@@ -29,9 +29,9 @@ namespace object_avoidance {
         paths_ = std::make_shared<std::vector<PathOption>>(num_paths);
         // Loop through and create intial paths options.
         int middle_index = (num_paths - 1) / 2;
-        float curvature_minimum = -1 / min_turn_radius;
-        float curvature_increment = -curvature_minimum / middle_index;
-        float curvature_current = curvature_minimum;
+        float_t curvature_minimum = -1 / min_turn_radius;
+        float_t curvature_increment = -curvature_minimum / middle_index;
+        float_t curvature_current = curvature_minimum;
         for (int i = 0; i < num_paths; i++) {
             if (i == middle_index) {
                 paths_->at(i).curvature = 0.0;
@@ -48,24 +48,90 @@ namespace object_avoidance {
     * 
     * @param cloud: the point cloud reading
     */
-    void ObjectAvoidance::UpdatePaths(const std::vector<Eigen::Vector2f>& cloud) {
+    void ObjectAvoidance::UpdatePaths(const std::vector<Eigen::Vector2f>& cloud, const Eigen::Vector2f nav_target) {
         // Loop over all the candidate paths and update their stats based on the current
         // point cloud.
         for (auto& path : *paths_) {
-            // Find the longest distance that can be traversed along this curve before
-            // collusion with a point
-            path.free_path_length = FindMinPathLength(cloud, path.curvature);
-            path.free_path_lengthv2 = FindMinPathLengthv2(cloud, path.curvature);            
-            // Find the turn magnitude, greater value means more straight.
-            path.turn_magnitude = abs((paths_->at(paths_->size() - 1).curvature - abs(path.curvature)));
-            // Calculate a path's final score.
-            path.score = (
-                score_max_distance_weight_ * path.free_path_length
-                + score_min_turn_weight * path.turn_magnitude
-                + score_clearanse * path.clearance);
+            path.free_path_lengthv2 = FindMinPathLengthv2(cloud, path.curvature, nav_target);            
+        }  
+        CalculateClearances(5);
+        // CalculateClearances(cloud);
+        for (auto& path : *paths_) {
+            path.score = score_max_distance_weight * path.free_path_lengthv2 + score_clearance_weight * path.clearance;
+        }   
+    }
+
+    void ObjectAvoidance::CalculateClearances(const int num_neighbors) {
+        float_t total;
+        int count;
+        int num_curvatures = paths_->size();
+        for (int i = 0; i < num_curvatures; i++){
+            total = 0;
+            count = 0;
+            for (int j = 0; j < (2 * num_neighbors + 1); j++){
+                if ((i - num_neighbors + j >= 0) && (i - num_neighbors + j < num_curvatures)) {
+                total += paths_->at(i - num_neighbors + j).free_path_lengthv2;
+                count += 1;
+                }
+            }
+            // paths_->at(i).clearance =  total / float_t(count);
+            paths_->at(i).clearance = std::min(total / float_t(count), paths_->at(i).free_path_lengthv2);
         }
-        FindPathClearances();
-    };
+    }
+
+    void ObjectAvoidance::CalculateClearances(const std::vector<Eigen::Vector2f>& cloud) {
+        float_t extra_side_safety = 0.0;
+        float_t extra_front_safety = 0.05;
+        float_t r;
+        Eigen::Vector2f turn_point;
+        float_t alpha;
+        float_t r_del_min;
+        float_t r_del;
+        float_t r_min;
+        float_t r_max; 
+        float_t r_obs;
+        float_t dist_to_point;
+        float_t point_alpha;
+
+        for (auto& path : *paths_) {
+            if (path.curvature == 0){
+                r_del_min = 1000000;
+                for (const auto& point: cloud) {
+                    if ((abs(point.y()) > car_specs_.total_side + extra_side_safety) && ((point.x() < path.free_path_lengthv2) && (point.x() >= 0))){
+                        r_del = abs(point.y()) - car_specs_.total_side + extra_side_safety;
+                        if (r_del < r_del_min){
+                            r_del_min = r_del;
+                        }
+                    }
+                }
+                path.clearance = r_del_min;
+            } else {
+                r = 1 / abs(path.curvature);
+                turn_point = Eigen::Vector2f(0.0, r * int(path.curvature / abs(path.curvature)));
+                alpha = path.free_path_lengthv2 * abs(path.curvature);
+                r_del_min = r;
+                r_min = r - (car_specs_.car_width / 2.0) - car_specs_.car_safety_margin_side - extra_side_safety;
+                r_max = sqrt(pow(r + (car_specs_.car_width / 2.0) + car_specs_.car_safety_margin_side + extra_side_safety, 2) + pow(-car_specs_.rear_axle_offset + (car_specs_.car_length / 2.0) + car_specs_.car_safety_margin_front + extra_front_safety, 2));
+                
+                for (const auto& point: cloud) {
+                    r_obs = GetDistance(turn_point, point);
+                    dist_to_point = GetDistance(point, Eigen::Vector2f(0.0, 0.0));
+                    point_alpha = acos((pow(dist_to_point, 2) - pow(r, 2) - pow(r_obs, 2))/(-2.0 * r * r_obs));
+                    if (((r_obs <= r_min) || (r_obs >= r_max)) && (point_alpha < alpha) && (point.x() > 0)){
+                        r_del = std::min(abs(r_min - r_obs), abs(r_obs - r_max));
+                        if (r_del < r_del_min){
+                            r_del_min = r_del;
+                        }
+                    }
+                }
+                if (r_del_min == r){
+                    path.clearance = path.free_path_lengthv2;
+                } else {
+                    path.clearance = r_del_min;
+                }
+            }
+        }
+    }
 
     /*
     * Find the clearance for each path. This is the average path length of its 2 neighbors
@@ -102,42 +168,42 @@ namespace object_avoidance {
     * 
     * @return the longest path along the given curve before any collision
     */
-    float_t ObjectAvoidance::FindMinPathLength(
-        const std::vector<Eigen::Vector2f>& cloud, float_t curvature) {
+    // float_t ObjectAvoidance::FindMinPathLength(
+    //     const std::vector<Eigen::Vector2f>& cloud, float_t curvature) {
 
-        // maximum distance reading by laser
-        float min_path_length = 10.0;
-        float path_length;
-        for (const auto& point: cloud) {
-            // To avoid division by zero, send zero curvature path to special linear
-            // calculator.
-            if (curvature == 0) {
-                path_length = FindStraightPathLength(point); 
-            } else {
-                path_length = FindCurvePathLength(point, curvature);
-            }
-            // Update the longest path possible if a shorter one has been calculated.
-            if (path_length < min_path_length) {
-                min_path_length = path_length;
-            }
-        }
-        return min_path_length;
-    }
+    //     // maximum distance reading by laser
+    //     float min_path_length = 10.0;
+    //     float path_length;
+    //     for (const auto& point: cloud) {
+    //         // To avoid division by zero, send zero curvature path to special linear
+    //         // calculator.
+    //         if (curvature == 0) {
+    //             path_length = FindStraightPathLength(point); 
+    //         } else {
+    //             path_length = FindCurvePathLength(point, curvature);
+    //         }
+    //         // Update the longest path possible if a shorter one has been calculated.
+    //         if (path_length < min_path_length) {
+    //             min_path_length = path_length;
+    //         }
+    //     }
+    //     return min_path_length;
+    // }
 
     // implements updated FindCurvePathLengthv2
     float_t ObjectAvoidance::FindMinPathLengthv2(
-        const std::vector<Eigen::Vector2f>& cloud, float_t curvature) {
+        const std::vector<Eigen::Vector2f>& cloud, float_t curvature, Eigen::Vector2f nav_target) {
 
         // maximum distance reading by laser
-        float min_path_length = 10.0;
-        float path_length;
+        float_t min_path_length = 10.0;
+        float_t path_length;
         for (const auto& point: cloud) {
             // To avoid division by zero, send zero curvature path to special linear
             // calculator.
             if (curvature == 0) {
-                path_length = FindStraightPathLength(point); 
+                path_length = FindStraightPathLength(point, nav_target); 
             } else {
-                path_length = FindCurvePathLengthv2(point, curvature);
+                path_length = FindCurvePathLengthv2(point, curvature, nav_target);
             }
             // Update the longest path possible if a shorter one has been calculated.
             if (path_length < min_path_length) {
@@ -155,14 +221,14 @@ namespace object_avoidance {
     * @return the longest path until collision with the point. Returns 10.0 if no
     * collision with the point
     */ 
-    float_t ObjectAvoidance::FindStraightPathLength(const Eigen::Vector2f& point) {
-        // First check if the y position is within the swept volume of the robot
-        // ROS_INFO("point = (%f, %f)", point.x(), point.y());
-        if (abs(point[1]) <= car_specs_.total_side) {
-            // TODO(alex): Why would this be negative?
-            return std::max(point[0] - car_specs_.total_front, (float_t)0.0);
-        }  else {
-            return 10.0;
+    float_t ObjectAvoidance::FindStraightPathLength(const Eigen::Vector2f& point, Eigen::Vector2f nav_target) {
+        float_t extra_front_safety = 0.0;
+        float_t extra_side_safety = 0.05;
+        float_t dist_to_target = GetDistance(nav_target, Eigen::Vector2f(0.0, 0.0));
+        if ((abs(point.y()) <= car_specs_.total_side + extra_side_safety) && (point.x() > car_specs_.total_front + extra_front_safety)) {
+            return std::min(dist_to_target, point.x() - car_specs_.total_front - extra_front_safety);
+        }  else { // point doesn't collide with front of car
+            return dist_to_target;
         }
     }
 
@@ -281,28 +347,35 @@ namespace object_avoidance {
                 return lhs.score < rhs.score;});
     }
 
-    float_t ObjectAvoidance::FindCurvePathLengthv2(const Eigen::Vector2f& point, float_t curvature) {
+    float_t ObjectAvoidance::FindCurvePathLengthv2(const Eigen::Vector2f& point, float_t curvature, Eigen::Vector2f nav_target) {
         
-        float r = 1 / abs(curvature);
+        float_t extra_side_safety = 0.0;
+        float_t extra_front_safety = 0.05;
+
+        float_t r = 1 / abs(curvature);
         Eigen::Vector2f turn_point = Eigen::Vector2f(0.0, r * int(curvature / abs(curvature)));
+        float_t target_to_turnradius = GetDistance(turn_point, nav_target);
+        float_t dist_to_target = GetDistance(nav_target, Eigen::Vector2f(0.0, 0.0));
+        float_t max_theta = acos((pow(dist_to_target, 2) - pow(r, 2) - pow(target_to_turnradius, 2))/(-2.0 * r * target_to_turnradius));
+        float_t max_arclength = abs(max_theta * r);
+
+        float_t r_min = r - (car_specs_.car_width / 2.0) - car_specs_.car_safety_margin_side - extra_side_safety;
+        float_t r_mid = sqrt(pow(r_min, 2) + pow(-car_specs_.rear_axle_offset + (car_specs_.car_length / 2.0) + car_specs_.car_safety_margin_front + extra_front_safety, 2)); 
+        float_t r_max = sqrt(pow(r + (car_specs_.car_width / 2.0) + car_specs_.car_safety_margin_side + extra_side_safety, 2) + pow(-car_specs_.rear_axle_offset + (car_specs_.car_length / 2.0) + car_specs_.car_safety_margin_front + extra_front_safety, 2)); 
+        float_t r_obs = GetDistance(turn_point, point);
         
-        float r_min = r - (car_specs_.car_width / 2.0) - car_specs_.car_safety_margin_side;
-        float r_mid = sqrt(pow(r_min, 2) + pow(-car_specs_.rear_axle_offset + (car_specs_.car_length / 2.0) + car_specs_.car_safety_margin_front, 2)); 
-        float r_max = sqrt(pow(r + (car_specs_.car_width / 2.0) + car_specs_.car_safety_margin_side, 2) + pow(-car_specs_.rear_axle_offset + (car_specs_.car_length / 2.0) + car_specs_.car_safety_margin_front, 2)); 
-        float r_obs = GetDistance(turn_point, point);
-        
-        float Beta;
-        float alpha;
+        float_t Beta;
+        float_t alpha;
         if ((r_min <= r_obs) && (r_obs < r_mid)){ // point will hit the side of car
-            Beta = acos(r - (car_specs_.car_width / 2.0) - car_specs_.car_safety_margin_side / r_obs);
+            Beta = acos((r - (car_specs_.car_width / 2.0) - car_specs_.car_safety_margin_side - extra_side_safety) / r_obs);
         } else if ((r_mid <= r_obs) && (r_obs <= r_max)) {  // point will hit front of car
-            Beta = asin((- car_specs_.rear_axle_offset + (car_specs_.car_length / 2.0) + car_specs_.car_safety_margin_front)/ r_obs);
+            Beta = asin((- car_specs_.rear_axle_offset + (car_specs_.car_length / 2.0) + car_specs_.car_safety_margin_front + extra_front_safety)/ r_obs);
         } else{ // else point doesn't hit car
-            return std::min(float(10.0), float((r * M_PI/2)));
+            return max_arclength; //std::min(float(10.0), float((r * M_PI/2)));
         }
-        float dist = GetDistance(point, Eigen::Vector2f(0.0, 0.0));
+        float_t dist = GetDistance(point, Eigen::Vector2f(0.0, 0.0));
         alpha =  acos((pow(r, 2) + pow(r_obs, 2) - pow(dist, 2))/(2 * r * r_obs)) - Beta;
 
-        return abs(alpha * r); //std::min(float(abs(alpha * r)), float((r * M_PI/2))); // alpha in radians to path length
+        return std::min(abs(alpha * r), max_arclength);
     }
 };

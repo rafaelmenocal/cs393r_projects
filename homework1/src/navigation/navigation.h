@@ -52,8 +52,8 @@ class Navigation {
   float car_width_ = 0.281;
   float car_length_ = 0.535;
   float car_height_ = 0.15;
-  float car_safety_margin_front_ = 0.33;
-  float car_safety_margin_side_ = 0.1;
+  float car_safety_margin_front_ = 0.2;
+  float car_safety_margin_side_ = 0.05;
   // -- Location of the robot's rear wheel axle relative to the center of the body.
   float rear_axle_offset_ = -0.162;
   object_avoidance::CarSpecs car_specs_ = {car_width_, car_height_,
@@ -107,6 +107,7 @@ class Navigation {
   Eigen::Vector2f odom_start_loc_;
   // Odometry-reported robot starting angle.
   float odom_start_angle_;
+  
   // Latest observed point cloud.
   std::vector<Eigen::Vector2f> point_cloud_;
 
@@ -116,6 +117,8 @@ class Navigation {
   Eigen::Vector2f nav_goal_loc_;
   // Navigation goal angle.
   float nav_goal_angle_;
+
+  float odom_omega_;
 
   double latency;
 
