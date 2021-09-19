@@ -223,11 +223,13 @@ namespace object_avoidance {
     */ 
     float_t ObjectAvoidance::FindStraightPathLength(const Eigen::Vector2f& point, Eigen::Vector2f nav_target) {
         float_t extra_front_safety = 0.0;
-        float_t extra_side_safety = 0.05;
+        float_t extra_side_safety = 0.1;
         float_t dist_to_target = GetDistance(nav_target, Eigen::Vector2f(0.0, 0.0));
         if ((abs(point.y()) <= car_specs_.total_side + extra_side_safety) && (point.x() > car_specs_.total_front + extra_front_safety)) {
             return std::min(dist_to_target, point.x() - car_specs_.total_front - extra_front_safety);
+            // return point.x() - car_specs_.total_front - extra_front_safety;
         }  else { // point doesn't collide with front of car
+            // return 10.0;
             return dist_to_target;
         }
     }
@@ -347,10 +349,22 @@ namespace object_avoidance {
                 return lhs.score < rhs.score;});
     }
 
+    bool PointWithinSafetyMargin(const Eigen::Vector2f proj_point,
+                             float width, float length,
+                             float axle_offset, float safety_margin_front, float safety_margin_side) {
+        bool within_length = (proj_point.x() < (axle_offset + length + safety_margin_front)) && (proj_point.x() > (axle_offset - safety_margin_front));
+        bool within_width = (proj_point.y() < (safety_margin_side + width/2.0)) && (proj_point.y() > (-safety_margin_side - width/2.0));
+        return within_length && within_width;
+    }
+
     float_t ObjectAvoidance::FindCurvePathLengthv2(const Eigen::Vector2f& point, float_t curvature, Eigen::Vector2f nav_target) {
         
         float_t extra_side_safety = 0.0;
-        float_t extra_front_safety = 0.05;
+        float_t extra_front_safety = 0.1;
+
+        if (PointWithinSafetyMargin(point, car_specs_.car_width, car_specs_.car_length, car_specs_.rear_axle_offset, car_specs_.car_safety_margin_front, car_specs_.car_safety_margin_side)){
+            return 10.0; //ignored as min path length point
+        }
 
         float_t r = 1 / abs(curvature);
         Eigen::Vector2f turn_point = Eigen::Vector2f(0.0, r * int(curvature / abs(curvature)));
@@ -371,11 +385,13 @@ namespace object_avoidance {
         } else if ((r_mid <= r_obs) && (r_obs <= r_max)) {  // point will hit front of car
             Beta = asin((- car_specs_.rear_axle_offset + (car_specs_.car_length / 2.0) + car_specs_.car_safety_margin_front + extra_front_safety)/ r_obs);
         } else{ // else point doesn't hit car
-            return max_arclength; //std::min(float(10.0), float((r * M_PI/2)));
+            return max_arclength;
+            // return std::min(float(10.0), float((r * M_PI/2))); //max_arclength;
         }
         float_t dist = GetDistance(point, Eigen::Vector2f(0.0, 0.0));
         alpha =  acos((pow(r, 2) + pow(r_obs, 2) - pow(dist, 2))/(2 * r * r_obs)) - Beta;
 
+        // return abs(alpha * r); 
         return std::min(abs(alpha * r), max_arclength);
     }
 };

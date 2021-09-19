@@ -67,6 +67,9 @@ std::vector<Vector2f> proj_point_cloud_;
 std::vector<Vector2f> drawn_point_cloud_;
 Eigen::Vector2f nav_target = Vector2f(5.0,0.0);
 int odd_num_paths = 101; // make sure this is odd
+double previous_time;
+double current_time;
+double del_time;
 } //namespace
 
 namespace navigation {
@@ -173,7 +176,9 @@ float_t CalculateVelocityMsg(const std::vector<Vector2f>& point_cloud_, object_a
     return 0.0;
   } else {
     ROS_INFO("Collision Alert: None");
-    return 0.5 * (min(free_path_length - critical_dist, float(4.0))) / 4.0 + 0.5;
+    // return max_vel;
+    // return max_vel * (min(free_path_length - critical_dist, float(4.0))) / 4.0
+    return 0.5 * max_vel * (min(free_path_length - critical_dist, float(4.0))) / 4.0 + max_vel * 0.5;
   }
   
   
@@ -208,6 +213,7 @@ Navigation::Navigation(const string& map_file, const double& latency, ros::NodeH
   global_viz_msg_ = visualization::NewVisualizationMessage(
       "map", "navigation_global");
   InitRosHeader("base_link", &drive_msg_.header);
+  ros::Time::init();
 
   // Create ObjectAvoidance object that will manage path calculations
   path_planner_.reset(
@@ -242,20 +248,25 @@ void Navigation::UpdateOdometry(const Vector2f& loc,
   robot_vel_ = vel;
   odom_loc_ = loc;
   odom_angle_ = angle;
+  current_time = ros::Time::now().toSec();
 
   if (odom_initialized_) {
+    del_time = current_time - previous_time;
     last_odom_vel_ = odom_vel_;
-    odom_vel_ = GetOdomVelocity(last_odom_loc_, odom_loc_, update_frequency_);
-    odom_accel_ = GetOdomAcceleration(last_odom_vel_, odom_vel_, update_frequency_);
+    odom_vel_ = GetOdomVelocity(last_odom_loc_, odom_loc_, 1.0 / del_time); //update_frequency_);
+    odom_accel_ = GetOdomAcceleration(last_odom_vel_, odom_vel_, 1.0 / del_time); //update_frequency_);
     speed = VelocityToSpeed(odom_vel_);
     accel = VectorAccelToAccel(odom_accel_);
     del_angle_ = odom_angle_ - last_odom_angle_;
-    odom_omega_ = del_angle_ * update_frequency_;
+    odom_omega_ = del_angle_ / del_time; // update_frequency_;
     critical_time =  speed / max_accel_;
     // critical_dist = 0.5 * (critical_time + latency) * speed;
     critical_dist = 0.5 * (critical_time + latency) * max_vel_;
 
-    ROS_INFO("================START CONTROL=================");    
+    ROS_INFO("================START CONTROL================="); 
+    ROS_INFO("current_time = %f", current_time);   
+    ROS_INFO("previous_time = %f", previous_time);  
+    ROS_INFO("del_time = %f", del_time); 
     ROS_INFO("odom_loc_ = (%f, %f)", odom_loc_.x(), odom_loc_.y());
     ROS_INFO("last_odom_loc_ = (%f, %f)", last_odom_loc_.x(), last_odom_loc_.y());
     ROS_INFO("odom_vel_ = (%f, %f)", odom_vel_.x(),odom_vel_.y());
@@ -273,6 +284,8 @@ void Navigation::UpdateOdometry(const Vector2f& loc,
     ROS_INFO("odom_omega_ = %f", odom_omega_);
     ROS_INFO("----------------------");
   }
+
+  previous_time = current_time;
  
   if (!odom_initialized_) {
     odom_start_angle_ = angle;
