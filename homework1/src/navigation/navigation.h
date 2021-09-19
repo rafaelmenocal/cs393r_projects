@@ -52,8 +52,8 @@ class Navigation {
   float car_width_ = 0.281;
   float car_length_ = 0.535;
   float car_height_ = 0.15;
-  float car_safety_margin_front_ = 0.33;
-  float car_safety_margin_side_ = 0.1;
+  float car_safety_margin_front_ = 0.1;
+  float car_safety_margin_side_ = 0.05;
   // -- Location of the robot's rear wheel axle relative to the center of the body.
   float rear_axle_offset_ = -0.162;
   object_avoidance::CarSpecs car_specs_ = {car_width_, car_height_,
