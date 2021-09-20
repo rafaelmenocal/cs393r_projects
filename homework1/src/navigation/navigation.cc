@@ -134,14 +134,12 @@ bool ProjectedPointCloudCollision(const std::vector<Vector2f>& proj_point_cloud_
 // Given the previous and current odometry readings
 // return the instantaneous velocity
 Vector2f GetOdomVelocity(const Vector2f& last_loc, const Vector2f& current_loc, float update_freq) {
-  // distance traveled in 1/20th of a second
   return update_freq * Vector2f(current_loc.x() - last_loc.x(), current_loc.y() - last_loc.y());
 }
 
 // Given the previous and current odometry readings
 // return the instantaneous velocity
 Vector2f GetOdomAcceleration(const Vector2f& last_vel, const Vector2f& current_vel, float update_freq) {
-  // change in velocity over 1/20th of a second
   return (last_vel - current_vel) / update_freq;
 }
 
@@ -176,18 +174,10 @@ float_t CalculateVelocityMsg(const std::vector<Vector2f>& point_cloud_, object_a
     return 0.0;
   } else {
     ROS_INFO("Collision Alert: None");
-    // return max_vel;
+    return max_vel;
     // return max_vel * (min(free_path_length - critical_dist, float(4.0))) / 4.0
-    return 0.5 * max_vel * (min(free_path_length - critical_dist, float(4.0))) / 4.0 + max_vel * 0.5;
+    // return 0.5 * max_vel * (min(free_path_length - critical_dist, float(4.0))) / 4.0 + max_vel * 0.5;
   }
-  
-  
-
-  // if (free_path_length < critical_dist) {
-  //   return 0.0;
-  // } else {
-  //   return max_vel;
-  // }
 }
 
 // -------END HELPER FUNCTIONS-------------
@@ -315,22 +305,13 @@ void Navigation::Run() {
   
   // -------START CONTROL---------------------------------------
 
-  // proj_point_cloud_ = ProjectPointCloud2D(point_cloud_, odom_vel_,
-  //                                         0.0, speed, latency, del_angle_, odom_omega_, drive_msg_.curvature);
+  // proj_point_cloud_ = ProjectPointCloud2D(point_cloud_, odom_vel_, 0.0, speed, latency, del_angle_, odom_omega_, drive_msg_.curvature);
   
   path_planner_->UpdatePaths(point_cloud_, nav_target);
   auto best_path = path_planner_->GetHighestScorePath(); //GetPlannedCurvature();
   drive_msg_.curvature = best_path.curvature;
   drive_msg_.velocity = CalculateVelocityMsg(point_cloud_, car_specs_, best_path.free_path_lengthv2, critical_dist, max_vel_);
   
-  // if (ProjectedPointCloudCollision(point_cloud_, car_width_, car_length_,
-  //                                  rear_axle_offset_, car_safety_margin_front_, car_safety_margin_side_)) {
-  //   collision = true;
-  // } else {
-  //   collision = false;
-  // }
-
-
   // ---------- Visualizations & Terminal Outputs -----------------
   
   DrawPaths(path_planner_->GetPaths());

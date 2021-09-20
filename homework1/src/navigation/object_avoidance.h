@@ -66,10 +66,8 @@ namespace object_avoidance {
             // float_t score_min_turn_weight = 0.5;
             float_t score_clearance_weight = 4.0;
         
-            float_t FindMinPathLength(const std::vector<Eigen::Vector2f>& cloud, float_t curvature);
             float_t FindMinPathLengthv2(const std::vector<Eigen::Vector2f>& cloud, float_t curvature, Eigen::Vector2f nav_target);
             float_t FindStraightPathLength(const Eigen::Vector2f& point, Eigen::Vector2f nav_target);
-            float_t FindCurvePathLength(const Eigen::Vector2f& point, float_t curvature);
             inline float_t GetDistance(float_t x0, float_t y0, float_t x1, float_t y1) {
                 return sqrt(pow(x1 - x0, 2.0) + pow(y1 - y0, 2.0));
             }
@@ -79,7 +77,10 @@ namespace object_avoidance {
             float_t FindCurvePathLengthv2(const Eigen::Vector2f& point, float_t curvature, Eigen::Vector2f nav_target);
             void FindPathClearances();
             void CalculateClearances(const int num_neighbors);
-            void CalculateClearances(const std::vector<Eigen::Vector2f>& cloud);
+            
+            // float_t FindCurvePathLength(const Eigen::Vector2f& point, float_t curvature);
+            // float_t FindMinPathLength(const std::vector<Eigen::Vector2f>& cloud, float_t curvature);
+            // void CalculateClearances(const std::vector<Eigen::Vector2f>& cloud);
 
 
         public:
