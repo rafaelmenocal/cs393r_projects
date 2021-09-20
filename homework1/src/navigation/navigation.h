@@ -18,13 +18,16 @@
 \author  Joydeep Biswas, (C) 2019
 */
 //========================================================================
+#ifndef __SRC_NAVIGATION_NAVIGATION__
+#define __SRC_NAVIGATION_NAVIGATION__
 
+#include <memory>
 #include <vector>
 
 #include "eigen3/Eigen/Dense"
 
-#ifndef NAVIGATION_H
-#define NAVIGATION_H
+#include "object_avoidance.h"
+
 
 namespace ros {
   class NodeHandle;
@@ -32,18 +35,9 @@ namespace ros {
 
 namespace navigation {
 
-struct PathOption {
-  float curvature;
-  float clearance;
-  float free_path_length;
-  Eigen::Vector2f obstruction;
-  Eigen::Vector2f closest_point;
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-};
-
 class Navigation {
  public:
-
+  
   // --------- Added ------------
   Eigen::Vector2f last_odom_loc_ = Eigen::Vector2f(0.0, 0.0);
   float last_odom_angle_ = 0.0;
@@ -58,10 +52,14 @@ class Navigation {
   float car_width_ = 0.281;
   float car_length_ = 0.535;
   float car_height_ = 0.15;
-  float car_safety_margin_front_ = 0.33;
-  float car_safety_margin_side_ = 0.08;
+  float car_safety_margin_front_ = 0.2;
+  float car_safety_margin_side_ = 0.05;
   // -- Location of the robot's rear wheel axle relative to the center of the body.
   float rear_axle_offset_ = -0.162;
+  object_avoidance::CarSpecs car_specs_ = {car_width_, car_height_,
+                         car_length_, car_safety_margin_front_,
+                         car_safety_margin_side_, rear_axle_offset_};
+  
   Eigen::Vector2f laser_loc_ = Eigen::Vector2f(0.2, 0.15);
   // -- Simulation Update Frequency.
   float update_frequency_ = 20.0;
@@ -109,6 +107,7 @@ class Navigation {
   Eigen::Vector2f odom_start_loc_;
   // Odometry-reported robot starting angle.
   float odom_start_angle_;
+  
   // Latest observed point cloud.
   std::vector<Eigen::Vector2f> point_cloud_;
 
@@ -119,10 +118,14 @@ class Navigation {
   // Navigation goal angle.
   float nav_goal_angle_;
 
+  float odom_omega_;
+
   double latency;
+
+  std::unique_ptr<object_avoidance::ObjectAvoidance> path_planner_;
 
 };
 
 }  // namespace navigation
 
-#endif  // NAVIGATION_H
+#endif  // __SRC_NAVIGATION_NAVIGATION__

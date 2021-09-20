@@ -92,7 +92,7 @@ void LaserCallback(const sensor_msgs::LaserScan& msg) {
     if (!((msg.ranges[p] >= msg.range_max) || (msg.ranges[p] <= msg.range_min))) {
       // create a Vector2f based on range and theta
       Vector2f point(msg.ranges[p] * cos(cur_theta), msg.ranges[p] * sin(cur_theta));
-      //shift point cloud by laster location
+      // shift point cloud by laser location
       point += kLaserLoc;
       // add point vector to point_cloud_
       point_cloud_.push_back(point);
