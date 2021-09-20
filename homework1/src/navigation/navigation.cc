@@ -147,7 +147,6 @@ void PrintPaths(object_avoidance::paths_ptr paths){
   ROS_INFO("----------------------");
   for (const auto& path : *paths){
     ROS_INFO("c= %f, fpl= %f, cl= %f s= %f", path.curvature,  path.free_path_lengthv2, path.clearance, path.score);
-  }
 }
 
 void DrawPaths(object_avoidance::paths_ptr paths){
