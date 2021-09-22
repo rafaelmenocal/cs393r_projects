@@ -202,7 +202,6 @@ namespace object_avoidance {
             // return std::min(float(10.0), float((r * M_PI/2))); //max_arclength;
         }
         float_t dist = GetDistance(point, Eigen::Vector2f(0.0, 0.0));
-        // alpha =  acos((pow(r, 2) + pow(r_obs, 2) - pow(dist, 2))/(2 * r * r_obs)) - Beta;
         alpha =  acos((pow(dist, 2) - pow(r_obs, 2) - pow(r, 2))/(-2 * r * r_obs)) - Beta;
 
         // return abs(alpha * r); 
