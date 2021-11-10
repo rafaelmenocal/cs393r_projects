@@ -45,7 +45,7 @@ class Navigation {
   Eigen::Vector2f last_odom_vel_ = Eigen::Vector2f(0.0, 0.0);
   Eigen::Vector2f odom_accel_ = Eigen::Vector2f(0.0, 0.0);
   // -- Kinematic and dynamic constraints for the car.
-  float max_vel_ = 1.0;
+  float max_vel_ = 2.0;
   float max_accel_ = 4.0;
   float min_turn_radius_ = 0.98;
   // -- Car dimensions.

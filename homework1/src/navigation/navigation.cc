@@ -66,7 +66,7 @@ float del_angle_ = 0.0;
 std::vector<Vector2f> proj_point_cloud_;
 std::vector<Vector2f> drawn_point_cloud_;
 Eigen::Vector2f nav_target = Vector2f(5.0,0.0);
-int odd_num_paths = 101; // make sure this is odd
+int odd_num_paths = 15; // make sure this is odd
 double previous_time;
 double current_time;
 double del_time;
